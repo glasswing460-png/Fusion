@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Council"/>
+<meta name="theme-color" content="#7c3aed"/>
+<title>OpenKal.ai // Council Engine</title>
+<script src="https://unpkg.com/preact@10.20.1/dist/preact.min.js"></script>
+<script src="https://unpkg.com/preact@10.20.1/hooks/dist/hooks.umd.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+<style>
+:root {
+  --bg:#06060e; --bg2:#0c0c16; --bg3:#121224;
+  --border:#1e1e38; --bfocus:#5b21b6;
+  --purple:#7c3aed; --purplelt:#a78bfa;
+  --text:#f1f5f9; --muted:#64748b; --dim:#334155;
+  --green:#34d399; --red:#f87171; --amber:#fbbf24;
+  --cyan:#67e8f9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.app{display:flex;height:100%;overflow:hidden}
+.sb{width:268px;background:#04040a;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .2s ease}
+.sb-head{padding:14px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sb-logo{display:flex;align-items:center;gap:7px;font-weight:800;font-size:14px;letter-spacing:.05em;color:#fff}
+.sb-badge{font-size:9px;color:var(--purplelt);font-weight:700;background:rgba(124,58,237,.25);padding:2px 6px;border-radius:4px;border:1px solid rgba(124,58,237,.4)}
+.sb-close{background:none;border:none;color:var(--muted);font-size:21px;cursor:pointer;display:none;line-height:1;padding:0 3px}
+.sb-new{margin:9px;padding:9px 13px;border:1px solid var(--border);border-radius:9px;background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;justify-content:space-between}
+.sb-new:hover{border-color:var(--purple);background:var(--bg3)}
+.sb-list{flex:1;overflow-y:auto;padding:0 7px 7px}
+.sb-sec{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:11px 8px 5px}
+.sb-item{width:100%;padding:8px 11px;border:none;background:none;color:var(--muted);font-size:12px;text-align:left;border-radius:7px;cursor:pointer;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s}
+.sb-item:hover{background:var(--bg2);color:var(--text)}
+.sb-item.active{background:rgba(124,58,237,.15);color:var(--purplelt);border-left:3px solid var(--purple);border-radius:0 7px 7px 0}
+.sb-foot{padding:11px 15px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);background:#020206}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;backdrop-filter:blur(2px)}
+.sb-overlay.show{display:block}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+.topbar{display:flex;align-items:center;gap:9px;padding:10px 15px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.menu-btn{background:none;border:none;color:var(--muted);font-size:19px;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px}
+.menu-btn:hover{background:var(--bg3);color:var(--text)}
+.top-title{flex:1;font-weight:700;font-size:14px;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-sel{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;flex-shrink:0}
+.mode-btn{padding:5px 10px;border:none;background:none;color:var(--muted);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.mode-btn.on{background:var(--purple);color:#fff}
+.cfg-btn{padding:5px 11px;border:1px solid var(--border);background:var(--bg3);border-radius:9px;color:var(--purplelt);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.cfg-btn:hover{border-color:var(--purple);background:var(--purple);color:#fff}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;max-width:580px;margin:0 auto}
+.welcome h1{font-size:24px;font-weight:900;margin-bottom:9px;letter-spacing:-.02em;background:linear-gradient(to right,#fff,var(--purplelt));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.65}
+.sug-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;max-width:500px}
+.sug{text-align:left;padding:11px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:3px}
+.sug:hover{border-color:var(--purple);background:var(--bg3);transform:translateY(-1px)}
+.sug strong{color:var(--purplelt);display:block}
+.sug small{color:var(--muted);font-size:11px}
+.sug.full{grid-column:span 2;text-align:center;background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.25);color:var(--purplelt);font-weight:600;align-items:center;padding:12px}
+.sug.full:hover{background:rgba(124,58,237,.1);border-color:var(--purple)}
+.diversity-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:22px;justify-content:center}
+.div-chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;border:1px solid;white-space:nowrap}
+.div-chip.fast{color:var(--cyan);border-color:rgba(103,232,249,.25);background:rgba(103,232,249,.07)}
+.div-chip.value{color:var(--green);border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.07)}
+.div-chip.reason{color:var(--amber);border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.07)}
+.div-chip.quality{color:var(--purplelt);border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.07)}
+.bwrap{display:flex;gap:12px;width:100%;max-width:860px;margin:0 auto;animation:fadeUp .2s cubic-bezier(.16,1,.3,1)}
+.bwrap.user{flex-direction:row-reverse}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;border:1px solid rgba(255,255,255,.05)}
+.av.ai{background:linear-gradient(135deg,var(--purple),#4c1d95);color:#fff;box-shadow:0 3px 9px rgba(124,58,237,.3)}
+.av.user{background:#1e293b;color:#94a3b8}
+.bubble{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:13px}
+.bwrap.user .bubble{background:var(--bg3);border-color:rgba(124,58,237,.2)}
+.bubble.editing{border-color:var(--bfocus);box-shadow:0 0 0 2px rgba(124,58,237,.12)}
+.b-top{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.edited-tag{font-size:9px;color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);padding:1px 5px;border-radius:3px;font-weight:700}
+.b-bot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--border)}
+.eng-tag{font-size:9px;font-weight:700;color:var(--purplelt);background:rgba(124,58,237,.1);padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}
+.elapsed{font-size:10px;color:var(--dim);font-family:monospace}
+.acts{display:flex;gap:4px}
+.act{background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;transition:all .1s;font-family:inherit}
+.act:hover{color:var(--text);background:var(--bg3);border-color:var(--border)}
+.act.ok{color:var(--green);border-color:rgba(52,211,153,.25)}
+.streaming-cursor::after{content:'▋';animation:blink .7s infinite;color:var(--purplelt);font-size:13px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* ── PROGRESS ── */
+.status-panel{background:#04040a;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:7px}
+.st-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.st-l{display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.dot.active{background:var(--purplelt);box-shadow:0 0 6px var(--purplelt);animation:pulse 1.4s infinite}
+.dot.done{background:var(--green)}
+.dot.fail{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.st-lbl{font-weight:500;color:var(--text);font-size:12px}
+.st-lbl.done{color:var(--muted)}
+.st-meta{font-size:10px;font-family:monospace;background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--purplelt);border:1px solid var(--border)}
+/* ── SPECIALIST GRID ── */
+.spec-grid{display:flex;flex-direction:column;gap:5px;margin-top:7px;padding-top:8px;border-top:1px solid var(--border)}
+/* each specialist row is now a column: top row (name+badge), optional preview below */
+.spec-row{display:flex;flex-direction:column;gap:2px}
+.spec-row-main{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.spec-name{font-size:11px;color:var(--text);font-weight:500;display:flex;align-items:center;gap:5px}
+.spec-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);flex-shrink:0;transition:background .3s}
+.spec-dot.active{background:var(--purplelt);box-shadow:0 0 5px var(--purplelt);animation:pulse 1.4s infinite}
+.spec-dot.done{background:var(--green)}
+.spec-dot.fail{background:var(--red)}
+.spec-mdl{font-size:10px;font-family:monospace;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;border:1px solid var(--border);white-space:nowrap}
+/* live thinking preview — shows first ~180 chars of streaming output */
+.spec-preview{font-size:10px;color:var(--dim);font-family:monospace;line-height:1.35;
+  overflow:hidden;max-height:30px;word-break:break-all;padding-left:10px;
+  border-left:2px solid var(--border);margin-left:2px;opacity:.85}
+/* ── PROSE ── */
+.prose{font-size:14px;line-height:1.7;color:#e2e8f0}
+.prose h2{font-size:16px;border-bottom:1px solid var(--border);padding-bottom:4px;color:var(--purplelt);margin:16px 0 8px;font-weight:700}
+.prose h3{font-size:14px;color:#fff;margin:12px 0 6px;font-weight:700}
+.prose h4{color:#cbd5e1;margin:10px 0 4px;font-weight:600}
+.prose p{margin-bottom:10px}
+.prose ul,.prose ol{padding-left:19px;margin-bottom:10px}
+.prose li{margin-bottom:3px}
+.prose code{background:#141424;padding:2px 5px;border-radius:5px;color:#f472b6;font-size:12px;font-family:monospace;border:1px solid rgba(255,255,255,.03)}
+.prose pre{background:#04040a;padding:13px;border-radius:9px;overflow-x:auto;margin:10px 0;border:1px solid var(--border)}
+.prose pre code{background:none;padding:0;color:#e2e8f0;border:none;font-size:12px}
+.prose strong{color:#fff;font-weight:600}
+.prose table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}
+.prose th,.prose td{border:1px solid var(--border);padding:6px 10px;text-align:left}
+.prose th{background:var(--bg3);color:#94a3b8;font-weight:600}
+.prose blockquote{border-left:3px solid var(--purple);padding-left:12px;color:#94a3b8;font-style:italic;margin:10px 0}
+.prose hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.edit-area{width:100%;background:var(--bg);border:1px solid var(--bfocus);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;font-family:inherit;resize:vertical;outline:none;min-height:72px;line-height:1.6;margin-bottom:7px}
+.edit-acts{display:flex;gap:7px}
+.edit-save{background:var(--purple);border:none;border-radius:7px;padding:6px 13px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .1s}
+.edit-save:hover{background:#6d28d9}
+.edit-cancel{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 12px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .1s}
+.edit-cancel:hover{color:var(--text)}
+.inputbar{padding:12px 19px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.input-wrap{display:flex;gap:9px;align-items:flex-end;max-width:860px;margin:0 auto}
+.input-wrap textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:11px 13px;color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;min-height:46px;max-height:160px;line-height:1.5;transition:border-color .15s}
+.input-wrap textarea:focus{border-color:var(--bfocus);box-shadow:0 0 0 2px rgba(124,58,237,.1)}
+.send-btn{width:46px;height:46px;background:var(--purple);border:none;border-radius:11px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;box-shadow:0 3px 8px rgba(124,58,237,.2)}
+.send-btn:disabled{opacity:.2;cursor:not-allowed;box-shadow:none}
+.send-btn:hover:not(:disabled){background:#6d28d9;transform:translateY(-1px)}
+.input-hint{text-align:center;font-size:11px;color:var(--dim);margin-top:6px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.83);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:17px;padding:22px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 24px -5px rgba(0,0,0,.5)}
+.modal-h{font-size:16px;font-weight:800;color:#fff;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:13px;line-height:1.5}
+.fgrp{margin-bottom:11px}
+.fgrp label{display:block;font-size:11px;font-weight:700;color:var(--purplelt);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.modal input,.modal select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s;font-family:inherit}
+.modal input:focus,.modal select:focus{border-color:var(--purple)}
+.modal-hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.modal-hint.ok{color:var(--green)}
+.modal-hint.info{color:var(--cyan)}
+.modal-sec{font-size:12px;font-weight:700;color:#fff;margin:15px 0 4px;display:flex;align-items:center;gap:7px}
+.modal-sec small{font-size:10px;color:var(--muted);font-weight:400}
+.role-desc{font-size:11px;color:var(--dim);margin-bottom:6px;padding-left:2px}
+.modal-btns{display:flex;gap:9px;margin-top:17px}
+.btn-p{flex:1;background:var(--purple);border:none;border-radius:9px;padding:11px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .1s}
+.btn-p:hover{background:#6d28d9}
+.btn-s{flex:1;background:var(--bg3);border:none;border-radius:9px;padding:11px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .1s}
+.btn-s:hover{color:var(--text)}
+.divider{height:1px;background:var(--border);margin:13px 0}
+.cost-est{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:9px 12px;font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px}
+.cost-est strong{color:var(--purplelt)}
+@media(max-width:768px){
+  .sb{position:fixed;height:100%;z-index:30}
+  .sb.hidden{transform:translateX(-268px)}
+  .sb-close{display:block!important}
+  .sug-grid{grid-template-columns:1fr}
+  .sug.full{grid-column:span 1}
+  .topbar{flex-wrap:wrap;gap:7px;padding:9px 13px}
+  .top-title{width:calc(100% - 42px)}
+  .mode-sel{order:3;width:100%}
+  .mode-btn{flex:1;text-align:center}
+}
+@media(min-width:769px){
+  .sb.hidden{transform:none}
+  .menu-btn{display:none!important}
+}
+/* ── FIX 2: COMPARE (blind A/B) ── */
+.cmp-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.cmp-card{background:#04040a;border:1px solid var(--border);border-radius:11px;padding:11px;min-width:0;overflow:hidden}
+.cmp-head{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.cmp-slot{font-size:12px;font-weight:800;color:#fff;letter-spacing:.04em}
+.cmp-src{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.05em}
+.cmp-src.masked{color:var(--muted);background:var(--bg3);border:1px solid var(--border)}
+.cmp-src.council{color:var(--purplelt);background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35)}
+.cmp-src.solo{color:var(--cyan);background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.3)}
+.cmp-wait{font-size:10px;color:var(--amber);margin-left:auto;font-family:monospace}
+.cmp-body{font-size:12.5px;line-height:1.55;max-height:420px;overflow-y:auto}
+.cmp-body .prose{font-size:12.5px}
+.cmp-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid var(--border)}
+.cmp-q{font-size:12px;font-weight:600;color:var(--text);margin-right:2px}
+.cmp-btn{padding:6px 13px;border:1px solid var(--purple);background:rgba(124,58,237,.12);color:var(--purplelt);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s}
+.cmp-btn:hover{background:var(--purple);color:#fff}
+.cmp-btn.tie{border-color:var(--border);background:var(--bg3);color:var(--muted)}
+.cmp-btn.tie:hover{color:var(--text);border-color:var(--muted)}
+.cmp-result{font-size:12.5px;font-weight:700;color:var(--green)}
+.cmp-tally{margin-top:8px;font-size:11px;color:var(--purplelt);background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:7px;padding:7px 10px;font-weight:600}
+@media(max-width:680px){ .cmp-wrap{grid-template-columns:1fr} }
+/* ── FIX 5: second opinion + verified badge ── */
+.second-op{margin-top:10px;font-size:12px;line-height:1.5;color:var(--amber);background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.22);border-left:3px solid var(--amber);border-radius:7px;padding:8px 11px}
+.second-op strong{color:var(--amber)}
+.verif-badge{font-size:9px;font-weight:700;color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.28);padding:2px 7px;border-radius:4px}
+/* ── FIX 3: tier chip ── */
+.tier-chip{font-size:9px;font-weight:700;color:var(--cyan);background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.22);padding:2px 7px;border-radius:4px;white-space:nowrap}
+/* ── FEATURE 1: CONFIDENCE METER ── */
+.conf-wrap{display:flex;align-items:center;gap:8px;padding:6px 0 2px;margin-bottom:2px}
+.conf-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:62px}
+.conf-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;max-width:180px}
+.conf-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.conf-pct{font-size:11px;font-weight:800;font-family:monospace;min-width:32px}
+.conf-pct.hi{color:var(--green)}
+.conf-pct.mid{color:var(--amber)}
+.conf-pct.lo{color:var(--red)}
+/* ── FEATURE 2: LIVE COST CHIP ── */
+.cost-chip{font-size:9px;font-weight:700;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.22);padding:2px 7px;border-radius:4px;font-family:monospace;white-space:nowrap}
+/* ── FEATURE 3: AUTO-REASON LINE ── */
+.auto-reason{font-size:10px;color:var(--dim);padding:4px 0 2px;line-height:1.4;font-style:italic}
+/* ── FIX 1: model-status banner ── */
+.mdl-status{display:flex;align-items:flex-start;gap:7px;font-size:11px;line-height:1.45;border-radius:8px;padding:8px 11px;margin-bottom:14px;max-width:500px;text-align:left}
+.mdl-status.ok{color:var(--green);background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2)}
+.mdl-status.warn{color:var(--amber);background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.22)}
+/* ── NEW: CONFLICT HEATMAP ── */
+.hm-wrap{margin-top:9px;background:#04040a;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.hm-head{width:100%;display:flex;align-items:center;gap:8px;padding:8px 11px;background:transparent;border:none;color:var(--text);font-family:inherit;cursor:pointer;text-align:left;font-size:12px}
+.hm-head:hover{background:rgba(124,58,237,.04)}
+.hm-title{font-weight:700;font-size:11px;color:var(--purplelt);letter-spacing:.03em;text-transform:uppercase}
+.hm-counts{display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;margin-left:6px}
+.hm-pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em}
+.hm-pill.severe{color:var(--red);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28)}
+.hm-pill.warn{color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.28)}
+.hm-pill.correct{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.28)}
+.hm-pill.skip{color:var(--muted);background:var(--bg3);border:1px solid var(--border)}
+.hm-toggle{font-size:10px;color:var(--dim);font-family:monospace}
+.hm-body{border-top:1px solid var(--border);padding:6px;max-height:280px;overflow-y:auto}
+.hm-row{display:grid;grid-template-columns:62px 110px 1fr;gap:7px;align-items:start;padding:6px 7px;border-radius:6px;font-size:11.5px;line-height:1.45}
+.hm-row:hover{background:rgba(124,58,237,.05)}
+.hm-row + .hm-row{margin-top:2px}
+.hm-tag{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;text-align:center;letter-spacing:.04em;align-self:start}
+.hm-tag.severe{color:var(--red);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32)}
+.hm-tag.warn{color:var(--amber);background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.32)}
+.hm-tag.correct{color:var(--green);background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.32)}
+.hm-tag.skip{color:var(--muted);background:var(--bg3);border:1px solid var(--border)}
+.hm-from{font-size:10px;color:var(--purplelt);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-snip{color:var(--text);opacity:.85}
+@media(max-width:680px){
+  .hm-row{grid-template-columns:55px 1fr;}
+  .hm-from{grid-column:2;font-size:10px;margin-bottom:-2px}
+  .hm-snip{grid-column:1/3}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { h, render } = preact;
+const { useState, useEffect, useRef, useMemo } = preactHooks;
+const html = htm.bind(h);
+
+// ── MODEL REGISTRY ─────────────────────────────────────────────────────────────
+const MODELS = [
+  { id: 'openai/gpt-4o-mini',              label: 'GPT-4o Mini',        tier: 'fast',    price: '~$0.00015/K', desc: 'Best router model. Ultra-fast, reliable JSON output.' },
+  { id: 'deepseek/deepseek-v4-flash',      label: 'DeepSeek V4 Flash',  tier: 'fast',    price: '~$0.00014/K', desc: 'Fastest DeepSeek tier. Great for routing and quick synthesis.' },
+  { id: 'moonshotai/kimi-k2.5',            label: 'Kimi K2.5',          tier: 'fast',    price: '~$0.00020/K', desc: 'Moonshot AI. Dominant on coding benchmarks. Extremely fast.' },
+  { id: 'deepseek/deepseek-v4-pro',        label: 'DeepSeek V4 Pro',    tier: 'value',   price: '~$0.00055/K', desc: 'Best cost-to-quality ratio. Near-frontier quality.' },
+  { id: 'qwen/qwen3.6-max-preview',        label: 'Qwen 3.6 Max',       tier: 'value',   price: '~$0.00060/K', desc: 'Alibaba frontier. Agent-first, strong at structured tasks.' },
+  { id: 'anthropic/claude-haiku-4.5',      label: 'Claude Haiku 4.5',   tier: 'value',   price: '~$0.00080/K', desc: 'Fastest Claude. Reliable, nuanced. Good for strategist.' },
+  { id: 'deepseek/deepseek-r1',            label: 'DeepSeek R1',        tier: 'reason',  price: '~$0.00055/K', desc: 'Transparent chain-of-thought. Best open reasoning model.' },
+  { id: 'x-ai/grok-4.3',                  label: 'Grok 4.3',           tier: 'reason',  price: '~$0.003/K',   desc: 'xAI frontier. Real-time data access. Best for adversarial.' },
+  { id: 'google/gemini-3.1-pro-preview',  label: 'Gemini 3.1 Pro',     tier: 'reason',  price: '~$0.003/K',   desc: 'Google frontier. Multi-million token context. Best for architecture.' },
+  { id: 'openai/gpt-5.5',                 label: 'GPT-5.5',            tier: 'quality', price: '~$0.005/K',   desc: 'OpenAI frontier. Best for strategy, creative synthesis.' },
+  { id: 'anthropic/claude-sonnet-4.6',    label: 'Claude Sonnet 4.6',  tier: 'quality', price: '~$0.003/K',   desc: 'Best Sonnet. Exceptional coding and reasoning. Dominant on SWE-Bench.' },
+  { id: 'anthropic/claude-opus-4.8',      label: 'Claude Opus 4.8',    tier: 'quality', price: '~$0.015/K',   desc: 'Most capable model. Best judge. Use where quality is non-negotiable.' },
+];
+
+// ── SPECIALISTS ────────────────────────────────────────────────────────────────
+const SPECIALISTS = {
+  logician: {
+    name: '🧠 Logician', strength: 'Deduction · Invariants · Epistemic limits',
+    persona: `You are the Master Logician. Apply rigorous multi-step structural deduction. Isolate variables, verify each intermediate milestone explicitly.
+Define operational invariants — absolute truths that must never change. Label anything unverified as UNVERIFIED.
+End with exactly one of: "CALIBRATION: CONFIDENT" or "CALIBRATION: LIMITS DETECTED — [precise reason]".
+Use these exact section headers:
+### DEDUCTION CHAIN
+### FORMAL INVARIANTS
+### EPISTEMIC LIMITS`
+  },
+  architect: {
+    name: '🏗️ Architect', strength: 'Type safety · Boundaries · Contracts',
+    persona: `You are the Structural Systems Architect. Detect type misalignments, hidden assumptions, memory boundary conditions, and broken interface contracts.
+Map all dependencies explicitly. Trace state exchange between components. Verify every boundary is enforced.
+Use these exact section headers:
+### TYPED SYSTEM ANALYSIS
+### CROSS-COMPONENT CONSISTENCY
+### STRUCTURAL RECOMMENDATION`
+  },
+  debugger: {
+    name: '🐛 Debugger', strength: 'Root causes · Race conditions · Patches',
+    persona: `You are the Deep Debugger. Isolate root causes from symptoms. Trace sequential execution failures step by step.
+Validate resource caps, race hazards, off-by-one errors, and transactional safety. Produce concrete patches, not descriptions.
+Use these exact section headers:
+### ROOT CAUSE DIAGNOSIS
+### BOUNDARY & EDGE FAILURES
+### PATCH DEFINITIONS`
+  },
+  adversary: {
+    name: '🛡️ Red Team', strength: 'Threats · Exploits · Hardening',
+    persona: `You are the Adversarial Evaluator. Think like a hostile threat actor with full system access.
+Probe state exposures, injection vectors, privilege escalation paths, and configuration leaks. Find non-obvious combinatorial failures.
+Use these exact section headers:
+### THREAT ANALYSIS
+### LATERAL EXPLOIT VECTORS
+### HARDENING SPECIFICATIONS`
+  },
+  strategist: {
+    name: '🎯 Strategist', strength: 'Lateral thinking · Human angle · Creativity',
+    persona: `You are the Strategic Synthesist. Connect non-obvious concepts. Think from human, market, and psychological perspectives.
+Find the creative, divergent approach the other specialists would miss. Respect hard technical constraints.
+Use these exact section headers:
+### LATERAL STRATEGIC ANALYSIS
+### HUMAN & MARKET DIMENSION
+### DIVERGENT SYNTHESIS`
+  }
+};
+
+const SPEC_KEYS = Object.keys(SPECIALISTS);
+
+// ── QUALITY TIERS — replaces per-role model config ────────────────────────────
+const MODEL_TIERS = {
+  high: {
+    label: '🔥 High',
+    desc:  'Frontier models across every role. Best possible answers.',
+    cost:  '~$0.10–0.20 / council query',
+    models: {
+      logician:   'anthropic/claude-opus-4.8',
+      architect:  'google/gemini-3.1-pro-preview',
+      debugger:   'deepseek/deepseek-v4-pro',      // V4 Pro → better concrete patches than R1
+      adversary:  'x-ai/grok-4.3',
+      strategist: 'openai/gpt-5.5',
+      judge:      'anthropic/claude-opus-4.8',
+      merge:      'anthropic/claude-sonnet-4.6',
+    }
+  },
+  medium: {
+    label: '⚡ Medium',
+    desc:  'Balanced quality and cost. Great for most tasks.',
+    cost:  '~$0.02–0.05 / council query',
+    models: {
+      logician:   'deepseek/deepseek-r1',           // R1 → purpose-built chain-of-thought
+      architect:  'moonshotai/kimi-k2.5',           // Kimi → cheaper, coding-strong
+      debugger:   'deepseek/deepseek-v4-pro',
+      adversary:  'deepseek/deepseek-r1',
+      strategist: 'deepseek/deepseek-v4-pro',       // versatile, no Haiku
+      judge:      'anthropic/claude-sonnet-4.6',
+      merge:      'deepseek/deepseek-v4-pro',
+    }
+  },
+  low: {
+    label: '💰 Low',
+    desc:  'Budget models. Fast, cheap, still multi-specialist.',
+    cost:  '~$0.005–0.015 / council query',
+    models: {
+      logician:   'deepseek/deepseek-v4-pro',
+      architect:  'moonshotai/kimi-k2.5',
+      debugger:   'deepseek/deepseek-v4-flash',
+      adversary:  'deepseek/deepseek-v4-pro',
+      strategist: 'qwen/qwen3.6-max-preview',       // Qwen → better than Haiku, no Haiku
+      judge:      'moonshotai/kimi-k2.5',           // Kimi → better synthesis than V4 Pro
+      merge:      'deepseek/deepseek-v4-flash',
+    }
+  },
+};
+
+const DEFAULT_TIER   = 'high';
+const DEFAULT_MODELS = MODEL_TIERS[DEFAULT_TIER].models;
+const DEFAULT_CONFIG = { openRouterKey: '', tavilyKey: '', tier: DEFAULT_TIER, models: { ...DEFAULT_MODELS } };
+
+const ROUTER_MODEL = 'openai/gpt-4o-mini';
+const FUSION_MODEL = 'openrouter/fusion';
+const OR_BASE      = 'https://openrouter.ai/api/v1/chat/completions';
+const TAVILY_BASE  = 'https://api.tavily.com/search';
+const S_CHATS      = 'openkal_chats_v1';
+const S_CONFIG     = 'openkal_config_v2';
+const S_EVAL       = 'openkal_eval_v1';
+const OR_MODELS    = 'https://openrouter.ai/api/v1/models';
+
+// ── FIX 1: MODEL VALIDATION + FALLBACKS ─────────────────────────────────────────
+// Each preferred model maps to an ordered list of real-world alternates. At runtime
+// we keep only models OpenRouter actually serves; anything missing is swapped for the
+// first live alternate. Last resort is a near-universal cheap anchor. This stops the
+// app silently breaking when a slug in the registry isn't live.
+const UNIVERSAL_FALLBACKS = ['openai/gpt-4o-mini', 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet'];
+const MODEL_FALLBACKS = {
+  'anthropic/claude-opus-4.8':     ['anthropic/claude-opus-4.1', 'anthropic/claude-3.7-sonnet', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
+  'anthropic/claude-sonnet-4.6':   ['anthropic/claude-3.7-sonnet', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
+  'anthropic/claude-haiku-4.5':    ['anthropic/claude-3.5-haiku', 'anthropic/claude-3-haiku', 'openai/gpt-4o-mini'],
+  'openai/gpt-5.5':                ['openai/gpt-4o', 'openai/gpt-4-turbo', 'anthropic/claude-3.5-sonnet'],
+  'google/gemini-3.1-pro-preview': ['google/gemini-pro-1.5', 'google/gemini-flash-1.5', 'openai/gpt-4o'],
+  'x-ai/grok-4.3':                 ['x-ai/grok-2-1212', 'x-ai/grok-2', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
+  'deepseek/deepseek-v4-pro':      ['deepseek/deepseek-chat', 'deepseek/deepseek-r1', 'openai/gpt-4o-mini'],
+  'deepseek/deepseek-v4-flash':    ['deepseek/deepseek-chat', 'openai/gpt-4o-mini'],
+  'deepseek/deepseek-r1':          ['deepseek/deepseek-chat', 'openai/gpt-4o-mini'],
+  'moonshotai/kimi-k2.5':          ['moonshotai/kimi-k2', 'deepseek/deepseek-chat', 'openai/gpt-4o-mini'],
+  'qwen/qwen3.6-max-preview':      ['qwen/qwen-2.5-72b-instruct', 'deepseek/deepseek-chat', 'openai/gpt-4o-mini'],
+  'openai/gpt-4o-mini':            ['openai/gpt-3.5-turbo'],
+};
+
+// Resolve a model id against the live set. validSet null/empty → don't touch (no data yet).
+const resolveModelId = (id, validSet) => {
+  if (!validSet || validSet.size === 0) return id;
+  if (validSet.has(id)) return id;
+  for (const alt of (MODEL_FALLBACKS[id] || [])) if (validSet.has(alt)) return alt;
+  for (const anchor of UNIVERSAL_FALLBACKS) if (validSet.has(anchor)) return anchor;
+  return id; // nothing live — return original so the error is visible, not silent
+};
+
+// Fetch the set of model ids OpenRouter is actually serving. Returns null on failure.
+const fetchValidModels = async (key) => {
+  try {
+    const r = await fetch(OR_MODELS, { headers: key ? { 'Authorization': `Bearer ${key}` } : {} });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const ids = (data.data || data.models || []).map(m => m.id).filter(Boolean);
+    return ids.length ? new Set(ids) : null;
+  } catch (_) { return null; }
+};
+
+// ── FIX 3: AUTO-TIER ────────────────────────────────────────────────────────────
+// Auto mode chooses the price tier from the question's complexity, but never exceeds
+// the tier the user selected (their budget ceiling). Hard → best models, easy → cheap.
+const TIER_RANK = { low: 0, medium: 1, high: 2 };
+const tierForComplexity = (c) => c === 'hard' ? 'high' : c === 'moderate' ? 'medium' : 'low';
+const capTier = (want, ceiling) => (TIER_RANK[want] <= TIER_RANK[ceiling] ? want : ceiling);
+
+// ── PROMPTS ────────────────────────────────────────────────────────────────────
+const ROUTER_PROMPT = `You are the Question Disturber & Architecture Router.
+Read the user request. Output ONLY valid JSON — no markdown, no text outside the JSON.
+{
+  "logician_directive":   "specific focus for this prompt",
+  "architect_directive":  "specific focus for this prompt",
+  "debugger_directive":   "specific focus for this prompt",
+  "adversary_directive":  "specific focus for this prompt",
+  "strategist_directive": "specific focus for this prompt",
+  "skip_masters": [],
+  "requires_web_search": false,
+  "search_query": "",
+  "complexity": "simple"
+}
+skip_masters: roles not needed. Options: "logician","architect","debugger","adversary","strategist". Max 2. Default [].
+requires_web_search: true ONLY if question needs current prices, live APIs, recent events, latest library versions, real-time data.
+search_query: optimized query string if requires_web_search true, else "".
+complexity: "simple" = conversational, factual, definitions — one good model is enough.
+"moderate" = code review, debugging, analysis, architecture — needs multiple perspectives.
+"hard" = production security, critical systems, high-stakes code — needs full adversarial council.`;
+
+const JUDGE_PROMPT = `You are the Supreme Judge AI Orchestrator.
+You have the original question and full adversarial council deliberations from 5 specialist AI models.
+Your job: produce the definitive, production-grade master synthesis.
+
+Run deep Long-Context Needle Retrieval across ALL specialist outputs. Reject sycophancy.
+Resolve every conflict with technical fact. Penalise vague assertions in the scorecard.
+
+Use EXACTLY these headers:
+## 🎯 SYSTEM TRUTH SYNTHESIS
+[Comprehensive final answer. Include code, formulas, or schemas as needed.]
+## ⚡ RECONCILED CONFLICTS
+[Each conflict: "**[Specialist A]** declared X vs **[Specialist B]** declared Y. **JUDGMENT:** [Resolution]."]
+## 🏆 EXPERT SCORECARD
+[Score each specialist 1–10 on: Accuracy · Constraint Integrity · Epistemic Calibration. Justify.]
+## ⚠️ RESIDUAL RISKS
+[Critical gaps or unknowns the council failed to address.]
+## ✅ ACTION STEPS
+[Numbered, concrete, ordered by priority.]`;
+
+const SUMMARY_PROMPT = `Summarise this conversation into one compact paragraph (max 150 words).
+Focus on: what was decided, what constraints were established, what problems were identified, what was tried and failed.
+Output only the paragraph — no preamble, no labels.`;
+
+// ── STRIKE TIER (moderate complexity — 2-3 specialists, no cross-exam, no Judge) ──
+const STRIKE_MODEL  = 'deepseek/deepseek-v4-pro';
+const STRIKE_PROMPT = `You are a fast synthesis engine. You have 2-3 specialist analyses on a technical question.
+Merge their best insights into one clear, direct answer. No pleasantries.
+Format: verdict first, then key points, then concrete recommendation.
+Be concise — this is Strike tier, not full Council.`;
+
+// ── FIX 4: CONSENSUS GATE — skip cross-exam when specialists already agree ──
+const CONSENSUS_PROMPT = `You decide whether expert analyses MATERIALLY disagree.
+Output ONLY JSON, no markdown: {"conflict": true} or {"conflict": false}.
+conflict=true if they contradict each other on substance, recommend incompatible approaches, or disagree on correctness/safety.
+conflict=false if they broadly agree and differ only in wording, emphasis, or minor detail.`;
+
+// ── NEW: CONFLICT EXTRACTION — pull only disagreements out of Round 1 outputs ──
+// Used in Round 2 so each specialist sees a tight bullet list of conflicts instead
+// of every other specialist's full essay. Cuts Round 2 input tokens ~50-70%.
+const CONFLICT_EXTRACT_PROMPT = `You extract specific points of DISAGREEMENT between expert analyses.
+You are given several specialist analyses on the same question. Output a TIGHT list of the substantive conflicts — places where the experts contradict each other on facts, approach, correctness, or safety.
+Format each conflict as one bullet:
+- TOPIC: <short topic> — <Name A> says <X>, but <Name B> says <Y>.
+Rules: cite specialists by name. Skip differences of wording, emphasis, or scope. Skip points where everyone agrees. Max 8 bullets. If nothing materially conflicts, output exactly: NO_MATERIAL_CONFLICTS`;
+
+// ── NEW: DEVIL'S ADVOCATE — single Red Team pass when consensus skips Round 2 ──
+// Hedges the consensus-gate's biggest risk: five models confidently sharing the
+// same blind spot. Forces one adversarial sweep before the judge synthesizes.
+const DEVIL_ADVOCATE_PROMPT = `You are the Red Team adversary. The other specialists all AGREED on this question — which is suspicious.
+Your job: find the most likely way that consensus is wrong. Specifically look for:
+1. Shared training-data blind spots (outdated APIs, deprecated patterns, version drift, hallucinated functions/libraries).
+2. An assumption everyone took for granted but that may not hold for THIS user's actual situation.
+3. A failure mode, edge case, or attack vector none of them flagged.
+Output 2-4 short bullets. If you genuinely cannot find a credible challenge after honest effort, output: CONSENSUS_HOLDS`;
+
+// ── FIX 5: SECOND-OPINION CHECK on fast (Quick) answers ──
+const VERIFY_PROMPT = `You are a fast, strict correctness checker. You see a user question and an assistant answer.
+If the answer is correct and reasonably complete, output ONLY: {"ok": true}
+If there is a clear factual error, logic flaw, dangerous omission, or wrong code, output ONLY: {"ok": false, "fix": "<one or two sentence correction>"}
+Judge substance only — never flag style or tone. Output JSON only, no markdown.`;
+
+// ── FIX 2: SOLO OPPONENT for blind Compare mode ──
+// Deliberately strong + fair, so the council is tested against a real single-model answer.
+const SOLO_PROMPT = `You are an elite senior engineer and analyst. Answer the user's request directly and rigorously.
+Include working code, formulas, or concrete steps where relevant. Be thorough but not padded. No pleasantries.`;
+
+// ── UTILITIES ──────────────────────────────────────────────────────────────────
+const parseSeverity = (text) => {
+  if (!text) return { severe: 0, warn: 0, correct: 0 };
+  return {
+    severe:  (text.match(/\[SEVERE\]/gi)  || []).length,
+    warn:    (text.match(/\[WARN\]/gi)    || []).length,
+    correct: (text.match(/\[CORRECT\]/gi) || []).length,
+  };
+};
+
+// NEW: pull individual tagged claims out of a specialist's Round 2 output.
+// Each cross-exam tag — [SEVERE]/[WARN]/[CORRECT]/[SKIP] — fires on a peer assertion;
+// we grab the surrounding ~250 chars so the heatmap UI can show what was being judged.
+const parseTaggedClaims = (text) => {
+  if (!text) return [];
+  const out = [];
+  const re = /\[(SEVERE|WARN|CORRECT|SKIP)\]/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const tag = m[1].toUpperCase();
+    const start = m.index + m[0].length;
+    // Snippet = up to next tag or 250 chars
+    re.lastIndex = start;
+    const nextHit = re.exec(text);
+    const end = nextHit ? Math.min(nextHit.index, start + 250) : Math.min(text.length, start + 250);
+    re.lastIndex = start; // reset so the outer loop continues normally
+    let snippet = text.slice(start, end).replace(/^[\s:—–-]+/, '').trim();
+    snippet = snippet.replace(/\n+/g, ' ').slice(0, 220);
+    if (snippet) out.push({ tag, snippet });
+  }
+  return out;
+};
+
+const shortModel = (id) => {
+  const name = (id || '').split('/')[1] || id;
+  return name.replace(/-(instruct|it|latest|001)$/, '').replace(/:.*$/, '');
+};
+
+// ── NEW FEATURE 1: CONFIDENCE METER ─────────────────────────────────────────────
+// Calculates 0–100 from specialist agreement/disagreement. Higher = more consensus.
+const calcConfidence = (r1ok, r2ok, consensusSkipped, devilFound) => {
+  const n = r1ok.length;
+  if (n < 2) return 95; // single specialist → high confidence by default
+
+  let score = 80; // base: having multiple specialists is inherently decent
+
+  if (consensusSkipped) {
+    score += 12; // all agreed without argument → strong signal
+    if (devilFound) score -= 8; // devil's advocate raised concerns
+  } else if (r2ok && r2ok.length > 0) {
+    // Parse tags across all Round 2 outputs
+    let totalSevere = 0, totalWarn = 0, totalCorrect = 0;
+    r2ok.forEach(r => {
+      const p = parseSeverity(r.content || '');
+      totalSevere += p.severe; totalWarn += p.warn; totalCorrect += p.correct;
+    });
+    score += totalCorrect * 3;   // each agreement boosts
+    score -= totalSevere * 8;    // each severe conflict drops hard
+    score -= totalWarn * 3;      // warnings drop moderately
+  }
+
+  return Math.max(15, Math.min(99, Math.round(score)));
+};
+
+// ── NEW FEATURE 2: LIVE COST ESTIMATOR ──────────────────────────────────────────
+// Rough per-1K-token costs for common models (input + output blended average).
+// Not exact — OpenRouter pricing changes — but gives users a real feel for spend.
+const MODEL_COST_PER_1K = {
+  'anthropic/claude-opus-4.8':     0.015,
+  'anthropic/claude-opus-4.1':     0.012,
+  'anthropic/claude-sonnet-4.6':   0.003,
+  'anthropic/claude-3.7-sonnet':   0.003,
+  'anthropic/claude-3.5-sonnet':   0.003,
+  'anthropic/claude-haiku-4.5':    0.0008,
+  'anthropic/claude-3.5-haiku':    0.0008,
+  'anthropic/claude-3-haiku':      0.00025,
+  'openai/gpt-5.5':               0.005,
+  'openai/gpt-4o':                 0.0025,
+  'openai/gpt-4o-mini':           0.00015,
+  'google/gemini-3.1-pro-preview': 0.003,
+  'google/gemini-pro-1.5':        0.003,
+  'google/gemini-flash-1.5':      0.00035,
+  'x-ai/grok-4.3':                0.003,
+  'x-ai/grok-2-1212':             0.002,
+  'x-ai/grok-2':                  0.002,
+  'deepseek/deepseek-v4-pro':     0.00055,
+  'deepseek/deepseek-v4-flash':   0.00014,
+  'deepseek/deepseek-chat':       0.00014,
+  'deepseek/deepseek-r1':         0.00055,
+  'moonshotai/kimi-k2.5':         0.0002,
+  'qwen/qwen3.6-max-preview':     0.0006,
+  'qwen/qwen-2.5-72b-instruct':   0.0004,
+};
+
+// Estimate cost of a single call. tokens = rough input+output tokens.
+const estCallCost = (modelId, tokens) => {
+  const rate = MODEL_COST_PER_1K[modelId] || 0.002; // fallback to mid-range guess
+  return rate * (tokens / 1000);
+};
+
+// ── NEW FEATURE 3: "WHY THIS MODE?" REASON ──────────────────────────────────────
+const autoReasonText = (complexity, eff, effTier) => {
+  const tierName = (MODEL_TIERS[effTier] || MODEL_TIERS[DEFAULT_TIER]).label;
+  if (eff === 'quick')   return `Auto → Quick · Simple question, single fast AI is enough · ${tierName}`;
+  if (eff === 'strike')  return `Auto → Strike · Moderate complexity, 3 specialists without full cross-exam · ${tierName}`;
+  if (eff === 'council') return `Auto → Council · Hard/multi-faceted question, full 5-specialist adversarial pipeline · ${tierName}`;
+  return `Auto → ${eff} · ${tierName}`;
+};
+
+const callOR = async (key, model, messages, maxTokens = 1200, temp = 0.1) => {
+  const r = await fetch(OR_BASE, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://openkal.ai', 'X-Title': 'OpenKal.ai Council' },
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: temp })
+  });
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const e = await r.json(); msg = e.error?.message || e.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const data = await r.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error(`Model "${shortModel(model)}" returned empty response`);
+  return content;
+};
+
+// Streaming call. onToken(fullAccumulatedText) fires as chunks arrive.
+// Returns final full text. Throws if stream is empty or HTTP error.
+const callORStream = async (key, model, messages, onToken, maxTokens = 1200, temp = 0.4, extra) => {
+  const r = await fetch(OR_BASE, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://openkal.ai', 'X-Title': 'OpenKal.ai Council' },
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: temp, stream: true, ...(extra || {}) })
+  });
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const e = await r.json(); msg = e.error?.message || e.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let full = '', buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const d = line.slice(6);
+      if (d === '[DONE]') continue;
+      try {
+        const tok = JSON.parse(d).choices?.[0]?.delta?.content || '';
+        if (tok) { full += tok; onToken(full); }
+      } catch (_) {}
+    }
+  }
+  if (!full) throw new Error(`Model "${shortModel(model)}" returned empty stream`);
+  return full;
+};
+
+const callFusion = async (key, prompt) => {
+  const r = await fetch(OR_BASE, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://openkal.ai', 'X-Title': 'OpenKal.ai Council' },
+    body: JSON.stringify({ model: FUSION_MODEL, messages: [{ role: 'user', content: prompt }],
+      tools: [{ type: 'openrouter:fusion' }], tool_choice: 'required' })
+  });
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const e = await r.json(); msg = e.error?.message || e.message || msg; } catch (_) {}
+    throw new Error(`Fusion: ${msg}`);
+  }
+  const data = await r.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Fusion returned empty response');
+  return content;
+};
+
+const tavilySearch = async (key, query) => {
+  if (!key || !query?.trim()) return null;
+  try {
+    const r = await fetch(TAVILY_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({ query: query.trim(), search_depth: 'basic', max_results: 3 })
+    });
+    if (!r.ok) return null;
+    const res = await r.json();
+    if (!res.results?.length) return null;
+    // Hard cap at 3000 chars — 5 specialists × 3000 = 15K extra chars max
+    return res.results.map(i => `[${i.title}]\n${i.content}`).join('\n\n').slice(0, 3000);
+  } catch (_) { return null; }
+};
+
+const runRouter = async (key, prompt, prevCtx = '') => {
+  let plan = {};
+  const input = prevCtx ? `CONVERSATION HISTORY:\n${prevCtx}\n\nCURRENT QUESTION:\n${prompt}` : prompt;
+  try {
+    const raw = await callOR(key, ROUTER_MODEL,
+      [{ role: 'system', content: ROUTER_PROMPT }, { role: 'user', content: input }],
+      600, 0.0
+    );
+    plan = JSON.parse(raw.replace(/```json|```/g, '').trim());
+  } catch (_) {}
+  const rawSkip  = Array.isArray(plan.skip_masters) ? plan.skip_masters : [];
+  const safeSkip = rawSkip.map(s => String(s).toLowerCase().trim()).filter(k => SPEC_KEYS.includes(k)).slice(0, 2);
+  const active   = SPEC_KEYS.filter(k => !safeSkip.includes(k));
+  const keys     = active.length >= 3 ? active : SPEC_KEYS;
+  return {
+    plan, keys, safeSkip,
+    requiresWebSearch: plan.requires_web_search === true || plan.requires_web_search === 'true',
+    searchQuery:       typeof plan.search_query === 'string' ? plan.search_query.trim() : '',
+    complexity:        ['simple','moderate','hard'].includes(plan.complexity) ? plan.complexity : 'moderate',
+  };
+};
+
+// Summarise the last 4 exchanges (8 msgs) into one compact context paragraph.
+// Uses ROUTER_MODEL (cheap, fast). Returns '' on any failure — safe degradation.
+const summariseHistory = async (key, chain) => {
+  const msgs = chain
+    .slice(0, -1)  // exclude the current user message
+    .filter(m => (m.role === 'user' || m.role === 'assistant') && m.content?.trim())
+    .slice(-8)     // last 4 exchanges
+    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content.slice(0, 500)}`);
+  if (msgs.length < 3) return '';
+  try {
+    return (await callOR(key, ROUTER_MODEL,
+      [{ role: 'system', content: SUMMARY_PROMPT }, { role: 'user', content: msgs.join('\n\n') }],
+      250, 0.0
+    )).trim();
+  } catch (_) { return ''; }
+};
+
+// FIX 4: cheap conflict check on Round-1 outputs. true = specialists disagree (run
+// cross-exam), false = they agree (skip it). On any failure, default true (safe).
+const checkConsensus = async (key, prompt, r1ok) => {
+  if (r1ok.length < 2) return false;
+  try {
+    const body = r1ok.map(r => `### ${r.name}\n${(r.content || '').slice(0, 800)}`).join('\n\n');
+    const raw = await callOR(key, ROUTER_MODEL,
+      [{ role: 'system', content: CONSENSUS_PROMPT },
+       { role: 'user', content: `QUESTION:\n${prompt}\n\nSPECIALIST ANALYSES:\n${body}` }],
+      80, 0.0
+    );
+    const j = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    return j.conflict === true || j.conflict === 'true';
+  } catch (_) { return true; }
+};
+
+// NEW: extract only the points of disagreement from Round 1 outputs. The cheap
+// router model writes a short conflict list that we send to specialists in Round 2,
+// replacing the full peer-essay dump. Returns '' on failure (caller falls back).
+const extractConflicts = async (key, r1ok) => {
+  if (r1ok.length < 2) return '';
+  try {
+    const body = r1ok.map(r => `### ${r.name}\n${(r.content || '').slice(0, 1400)}`).join('\n\n');
+    const raw = await callOR(key, ROUTER_MODEL,
+      [{ role: 'system', content: CONFLICT_EXTRACT_PROMPT }, { role: 'user', content: body }],
+      400, 0.0
+    );
+    const txt = (raw || '').trim();
+    if (!txt || /^NO_MATERIAL_CONFLICTS\s*$/i.test(txt)) return '';
+    return txt;
+  } catch (_) { return ''; }
+};
+
+function genIcon(size) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const x = c.getContext('2d'), r = size * 0.18, s = size;
+    x.fillStyle = '#7c3aed';
+    x.beginPath();
+    x.moveTo(r,0); x.lineTo(s-r,0); x.arcTo(s,0,s,r,r);
+    x.lineTo(s,s-r); x.arcTo(s,s,s-r,s,r);
+    x.lineTo(r,s); x.arcTo(0,s,0,s-r,r);
+    x.lineTo(0,r); x.arcTo(0,0,r,0,r);
+    x.closePath(); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.95)';
+    x.beginPath();
+    x.moveTo(s*.58,s*.10); x.lineTo(s*.35,s*.52); x.lineTo(s*.50,s*.52);
+    x.lineTo(s*.42,s*.90); x.lineTo(s*.65,s*.48); x.lineTo(s*.50,s*.48);
+    x.closePath(); x.fill();
+    return c.toDataURL('image/png');
+  } catch (_) { return null; }
+}
+
+// ── COMPONENTS ─────────────────────────────────────────────────────────────────
+
+function SettingsModal({ config, onSave, onClose }) {
+  const [loc, setLoc] = useState({
+    ...DEFAULT_CONFIG, ...config,
+    tier:   config.tier   || DEFAULT_TIER,
+    models: config.models || { ...DEFAULT_MODELS },
+  });
+  const setK    = (k, v) => setLoc(p => ({ ...p, [k]: v }));
+  const setTier = (t)    => setLoc(p => ({ ...p, tier: t, models: { ...MODEL_TIERS[t].models } }));
+  return html`
+    <div class="modal-bg" onClick=${e => e.target.className === 'modal-bg' && onClose()}>
+      <div class="modal">
+        <div class="modal-h">🔑 Configuration</div>
+        <div class="modal-sub">
+          One OpenRouter key gives access to every model. Add credit at <strong>openrouter.ai</strong>.
+          Tavily key is optional — enables live web search inside the council.
+        </div>
+        <div class="fgrp">
+          <label>OpenRouter API Key <span style="color:var(--red);font-size:10px">required</span></label>
+          <input type="password" value=${loc.openRouterKey} placeholder="sk-or-v1-..."
+            onInput=${e => setK('openRouterKey', e.target.value)}/>
+          <div class=${`modal-hint${loc.openRouterKey ? ' ok' : ''}`}>
+            ${loc.openRouterKey ? '✓ Key entered — stored in your browser only' : 'Stored in your browser. Sent only to openrouter.ai.'}
+          </div>
+        </div>
+        <div class="fgrp">
+          <label>Tavily Search Key <span style="color:var(--dim);font-size:10px;font-weight:400">optional</span></label>
+          <input type="password" value=${loc.tavilyKey || ''} placeholder="tvly-..."
+            onInput=${e => setK('tavilyKey', e.target.value)}/>
+          <div class=${`modal-hint${loc.tavilyKey ? ' info' : ''}`}>
+            ${loc.tavilyKey ? '✓ Web search active — council gets live data context' : 'Without this, council uses training data only. Free tier at tavily.com.'}
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="modal-sec">⚡ Quality Tier <small>— auto-assigns best models per role</small></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          ${['high','medium','low'].map(t => html`
+            <button key=${t}
+              style="flex:1;padding:11px 6px;border-radius:10px;border:2px solid ${loc.tier===t?'var(--purple)':'var(--border)'};background:${loc.tier===t?'rgba(124,58,237,.15)':'var(--bg)'};color:${loc.tier===t?'var(--purplelt)':'var(--muted)'};font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;line-height:1.5"
+              onClick=${() => setTier(t)}>
+              ${MODEL_TIERS[t].label}<br/>
+              <span style="font-size:10px;font-weight:400;opacity:.75">${MODEL_TIERS[t].cost}</span>
+            </button>`)}
+        </div>
+        <div class="modal-hint info" style="margin-bottom:4px">${MODEL_TIERS[loc.tier].desc}</div>
+        <div class="cost-est" style="margin-top:10px">
+          <strong>What changes per tier:</strong><br/>
+          🔥 High — Opus 4.8 judge, Grok Red Team, GPT-5.5 Strategist, V4 Pro Debugger.<br/>
+          ⚡ Medium — Sonnet 4.6 judge, DeepSeek R1 Logician + Adversary, Kimi Architect.<br/>
+          💰 Low — Kimi K2.5 judge, Qwen Strategist, flash models for speed.
+        </div>
+        <div class="modal-btns">
+          <button class="btn-p" onClick=${() => { onSave(loc); onClose(); }}>Save Configuration</button>
+          <button class="btn-s" onClick=${onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function ProgressTracker({ steps, specialists }) {
+  return html`
+    <div class="status-panel">
+      ${steps.map((s, i) => html`
+        <div class="st-row" key=${i}>
+          <div class="st-l">
+            <div class=${`dot ${s.state}`}></div>
+            <span class=${`st-lbl${s.state === 'done' ? ' done' : ''}`}>${s.label}</span>
+          </div>
+          ${s.meta && html`<span class="st-meta">${s.meta}</span>`}
+        </div>`)}
+      ${specialists && specialists.length > 0 && html`
+        <div class="spec-grid">
+          ${specialists.map(s => html`
+            <div class="spec-row" key=${s.id}>
+              <div class="spec-row-main">
+                <span class="spec-name">
+                  <span class=${`spec-dot ${s.state}`}></span>
+                  ${s.name}
+                </span>
+                <span class="spec-mdl">${shortModel(s.model)}</span>
+              </div>
+              ${s.preview && html`<div class="spec-preview">${s.preview}</div>`}
+            </div>`)}
+        </div>`}
+    </div>`;
+}
+
+function Markdown({ text }) {
+  const rendered = useMemo(() => {
+    if (!text) return '';
+    try { return marked.parse(text); } catch (_) { return text; }
+  }, [text]);
+  return html`<div class="prose" dangerouslySetInnerHTML=${{ __html: rendered }}/>`;
+}
+
+// NEW: collapsible heatmap of cross-examination tags from Round 2 outputs.
+// Each row shows which specialist tagged which peer claim and how (SEVERE/WARN/CORRECT/SKIP).
+// Collapsed by default; the count summary is always visible.
+function ConflictHeatmap({ rows }) {
+  const [open, setOpen] = useState(false);
+  const counts = rows.reduce((acc, r) => { acc[r.tag] = (acc[r.tag] || 0) + 1; return acc; }, {});
+  const order = ['SEVERE', 'WARN', 'CORRECT', 'SKIP'];
+  const total = rows.length;
+  return html`
+    <div class="hm-wrap">
+      <button class="hm-head" onClick=${() => setOpen(o => !o)}>
+        <span class="hm-title">⚖️ Cross-exam heatmap</span>
+        <span class="hm-counts">
+          ${order.map(t => (counts[t] || 0) > 0 && html`
+            <span key=${t} class=${`hm-pill ${t.toLowerCase()}`}>${counts[t]} ${t}</span>`)}
+        </span>
+        <span class="hm-toggle">${open ? '▾' : '▸'} ${total}</span>
+      </button>
+      ${open && html`
+        <div class="hm-body">
+          ${rows.map((r, i) => html`
+            <div class="hm-row" key=${i}>
+              <span class=${`hm-tag ${r.tag.toLowerCase()}`}>${r.tag}</span>
+              <span class="hm-from">${r.from}</span>
+              <span class="hm-snip">${r.snippet}</span>
+            </div>`)}
+        </div>`}
+    </div>`;
+}
+
+function MsgBubble({ msg, editId, editContent, onEditStart, onEditChange, onEditSave, onEditCancel, loading }) {
+  const isUser    = msg.role === 'user';
+  const isEditing = editId === msg.id;
+  const [copied, setCopied] = useState(false);
+  const copy = (text) => {
+    const fb = () => {
+      const t = document.createElement('textarea');
+      t.value = text; t.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(t); t.focus(); t.select();
+      try { document.execCommand('copy'); } catch (_) {}
+      document.body.removeChild(t);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })
+        .catch(() => { fb(); setCopied(true); setTimeout(() => setCopied(false), 1500); });
+    } else { fb(); setCopied(true); setTimeout(() => setCopied(false), 1500); }
+  };
+  // FIX 2: blind A/B local state — reveal which answer was which, and keep a running tally.
+  const [revealed, setRevealed] = useState(false);
+  const [pick, setPick]   = useState(null);
+  const [tally, setTally] = useState(() => { try { return JSON.parse(localStorage.getItem(S_EVAL) || '{}'); } catch (_) { return {}; } });
+
+  const recordPick = (choice) => {
+    const items = (msg.compare && msg.compare.items) || [];
+    let winnerSrc = 'tie';
+    if (choice === 'A' || choice === 'B') { const it = items.find(x => x.slot === choice); winnerSrc = it ? it.src : 'tie'; }
+    const t = { council: tally.council||0, solo: tally.solo||0, tie: tally.tie||0, total: tally.total||0 };
+    if (winnerSrc === 'council') t.council++; else if (winnerSrc === 'solo') t.solo++; else t.tie++;
+    t.total++;
+    try { localStorage.setItem(S_EVAL, JSON.stringify(t)); } catch (_) {}
+    setTally(t); setPick({ choice, winnerSrc }); setRevealed(true);
+  };
+
+  const cmpItems = (msg.compare && msg.compare.items) || [];
+  const slotSrc  = (slot) => { const it = cmpItems.find(x => x.slot === slot); return it ? it.src : ''; };
+  const pickNote = pick
+    ? (pick.winnerSrc === 'council' ? '✅ You picked the Council.'
+      : pick.winnerSrc === 'solo'   ? '🤖 You picked the single model.'
+      :                               '🤝 You called it a tie.')
+      + `  (A = ${slotSrc('A') === 'council' ? 'Council' : 'Single'}, B = ${slotSrc('B') === 'council' ? 'Council' : 'Single'})`
+    : '';
+  const tallyNote = (tally && tally.total)
+    ? `Council ${tally.council||0} · Single ${tally.solo||0} · Tie ${tally.tie||0} — over ${tally.total} blind test${tally.total===1?'':'s'}`
+    : '';
+
+  // Footer hidden while streaming — copy button shouldn't appear on partial content.
+  // msg.streaming is undefined on old sessions → !undefined = true → footer shows correctly.
+  const showFoot = !isEditing && !msg.streaming && (isUser || msg.content || msg.compare);
+  return html`
+    <div class=${`bwrap ${isUser ? 'user' : 'ai'}`}>
+      <div class=${`av ${isUser ? 'user' : 'ai'}`}>${isUser ? 'U' : 'Ξ'}</div>
+      <div class=${`bubble${isEditing ? ' editing' : ''}`}>
+        <div class="b-top">
+          <span>${isUser ? 'You' : 'Council'}</span>
+          ${msg.edited   && html`<span class="edited-tag">edited</span>`}
+          ${msg.webSearch && html`<span style="font-size:9px;color:var(--cyan);background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.2);padding:1px 5px;border-radius:3px;font-weight:700">🔍 web</span>`}
+          ${msg.hasSummary && html`<span style="font-size:9px;color:var(--amber);background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.18);padding:1px 5px;border-radius:3px;font-weight:700">🧠 ctx</span>`}
+          ${msg.ts && html`<span style="color:var(--dim);margin-left:auto">${new Date(msg.ts).toLocaleTimeString()}</span>`}
+        </div>
+        ${msg.steps && msg.steps.length > 0 && html`
+          <${ProgressTracker} steps=${msg.steps} specialists=${msg.specialists || []}/>`}
+        ${!isUser && msg.heatmap && msg.heatmap.length > 0 && html`
+          <${ConflictHeatmap} rows=${msg.heatmap}/>`}
+        ${isEditing ? html`
+          <textarea class="edit-area" autofocus value=${editContent}
+            onInput=${e => onEditChange(e.target.value)} rows="3"></textarea>
+          <div class="edit-acts">
+            <button class="edit-save" onClick=${onEditSave}>✓ Save & Rerun</button>
+            <button class="edit-cancel" onClick=${onEditCancel}>✗ Cancel</button>
+          </div>` : html`
+          ${msg.engineMode === 'compare' && msg.compare ? html`
+            <div class="cmp-wrap">
+              ${msg.compare.items.map(it => html`
+                <div class="cmp-card" key=${it.slot}>
+                  <div class="cmp-head">
+                    <span class="cmp-slot">Answer ${it.slot}</span>
+                    ${revealed
+                      ? html`<span class=${`cmp-src ${it.src}`}>${it.src === 'council' ? '🔮 Council' : '🤖 Single model'}</span>`
+                      : html`<span class="cmp-src masked">identity hidden</span>`}
+                    ${!it.done && html`<span class="cmp-wait">⏳ working…</span>`}
+                  </div>
+                  <div class="cmp-body">
+                    ${it.content
+                      ? html`<${Markdown} text=${it.content}/>`
+                      : html`<span style="color:var(--dim);font-size:12px">Waiting for output…</span>`}
+                  </div>
+                </div>`)}
+            </div>
+            ${msg.compare.items.every(it => it.done) && html`
+              <div class="cmp-actions">
+                ${!revealed ? html`
+                  <span class="cmp-q">Read both blind — which is better?</span>
+                  <button class="cmp-btn" onClick=${() => recordPick('A')}>A is better</button>
+                  <button class="cmp-btn" onClick=${() => recordPick('B')}>B is better</button>
+                  <button class="cmp-btn tie" onClick=${() => recordPick('tie')}>Tie</button>
+                ` : html`<span class="cmp-result">${pickNote}</span>`}
+              </div>`}
+            ${revealed && tallyNote && html`<div class="cmp-tally">📊 ${tallyNote}</div>`}
+          ` : html`
+            ${msg.content && (isUser
+              ? html`<p style="white-space:pre-wrap;font-size:14px;line-height:1.6">${msg.content}</p>`
+              : html`<div class=${msg.streaming ? 'streaming-cursor' : ''}><${Markdown} text=${msg.content}/></div>`
+            )}
+            ${!isUser && msg.secondOpinion && html`
+              <div class="second-op">⚠️ <strong>Second-opinion note:</strong> ${msg.secondOpinion}</div>`}
+          `}`}
+        ${showFoot && html`
+          ${!isUser && msg.autoReason && html`<div class="auto-reason">🤖 ${msg.autoReason}</div>`}
+          ${!isUser && msg.confidence && msg.confidence > 0 && !msg.streaming && html`
+            <div class="conf-wrap">
+              <span class="conf-label">Confidence</span>
+              <div class="conf-track">
+                <div class="conf-fill" style=${`width:${msg.confidence}%;background:${
+                  msg.confidence >= 85 ? 'var(--green)' : msg.confidence >= 65 ? 'var(--amber)' : 'var(--red)'
+                }`}></div>
+              </div>
+              <span class=${`conf-pct ${msg.confidence >= 85 ? 'hi' : msg.confidence >= 65 ? 'mid' : 'lo'}`}>${msg.confidence}%</span>
+            </div>`}
+          <div class="b-bot">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              ${!isUser && msg.engineMode === 'council' && html`<span class="eng-tag">Council DAG</span>`}
+              ${!isUser && msg.engineMode === 'fusion'  && msg.content && html`<span class="eng-tag">⚡ Fusion</span>`}
+              ${!isUser && msg.engineMode === 'strike'  && msg.content && html`<span class="eng-tag" style="background:rgba(251,191,36,.1);color:var(--amber);border-color:rgba(251,191,36,.2)">⚡ Strike</span>`}
+              ${!isUser && msg.engineMode === 'compare' && html`<span class="eng-tag" style="background:rgba(103,232,249,.1);color:var(--cyan);border-color:rgba(103,232,249,.25)">⚖️ Compare</span>`}
+              ${!isUser && msg.tierLabel && msg.engineMode !== 'fusion' && html`<span class="tier-chip">${msg.tierLabel}</span>`}
+              ${!isUser && msg.verified && html`<span class="verif-badge">✓ double-checked</span>`}
+              ${msg.elapsed && html`<span class="elapsed">${msg.elapsed}s</span>`}
+              ${!isUser && msg.cost > 0 && html`<span class="cost-chip">$${msg.cost < 0.01 ? msg.cost.toFixed(4) : msg.cost.toFixed(3)}</span>`}
+            </div>
+            <div class="acts">
+              ${isUser && !loading && html`<button class="act" onClick=${() => onEditStart(msg.id)}>✏ Edit</button>`}
+              ${msg.content && html`
+                <button class=${`act${copied ? ' ok' : ''}`} onClick=${() => copy(msg.content)}>
+                  ${copied ? '✓ Copied' : '⎘ Copy'}
+                </button>`}
+            </div>
+          </div>`}
+      </div>
+    </div>`;
+}
+
+function Sidebar({ chats, activeId, onSelect, onNew, visible, onClose }) {
+  return html`
+    <div>
+      <div class=${`sb-overlay${visible ? ' show' : ''}`} onClick=${onClose}></div>
+      <aside class=${`sb${visible ? '' : ' hidden'}`}>
+        <div class="sb-head">
+          <div class="sb-logo">⚡ OpenKal.ai <span class="sb-badge">v5</span></div>
+          <button class="sb-close" onClick=${onClose}>×</button>
+        </div>
+        <button class="sb-new" onClick=${onNew}><span>New Session</span><span style="opacity:.5">+</span></button>
+        <div class="sb-list">
+          <div class="sb-sec">History</div>
+          ${chats.length === 0 && html`<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px">No sessions yet.</p>`}
+          ${chats.map(c => html`
+            <button key=${c.id} class=${`sb-item${c.id === activeId ? ' active' : ''}`}
+              onClick=${() => { onSelect(c); onClose(); }}>${c.title || 'Untitled Thread'}</button>`)}
+        </div>
+        <div class="sb-foot">Keys stored in your browser only</div>
+      </aside>
+    </div>`;
+}
+
+// ── MAIN APP ───────────────────────────────────────────────────────────────────
+const DEMO = `[COUNCIL CHALLENGE]
+Build a TypeScript telemetry synchronization pipeline:
+1. Accept streaming frames with microsecond timestamps.
+2. Invariant: No processed frame timestamp can be less than its predecessor.
+3. Constraint: Memory allocations capped dynamically at 40MB inside an isolate.
+Deliberately include a race hazard and an off-by-one memory leak. Have the council find and fix both.`;
+
+function App() {
+  const [chats,   setChats]   = useState(() => { try { return JSON.parse(localStorage.getItem(S_CHATS)||'[]'); } catch(_){ return []; } });
+  const [chatId,  setChatId]  = useState(null);
+  const [msgs,    setMsgs]    = useState([]);
+  const [input,   setInput]   = useState('');
+  const [loading, setLoading] = useState(false);
+  const [mode,    setMode]    = useState('auto');
+  const [showCfg, setShowCfg] = useState(false);
+  const [sbOpen,  setSbOpen]  = useState(false);
+  const [editId,  setEditId]  = useState(null);
+  const [editTxt, setEditTxt] = useState('');
+  const [modelStatus, setModelStatus] = useState({ checked: false, remaps: [], missing: [] });
+
+  const [config, setConfig] = useState(() => {
+    try {
+      const raw = localStorage.getItem(S_CONFIG);
+      if (raw) {
+        const p    = JSON.parse(raw);
+        const tier = (p.tier && MODEL_TIERS[p.tier]) ? p.tier : DEFAULT_TIER;
+        return { ...DEFAULT_CONFIG, ...p,
+          openRouterKey: p.openRouterKey || p.groqKey || '',
+          tavilyKey:     p.tavilyKey || '',
+          tier,
+          models: { ...MODEL_TIERS[tier].models } };
+      }
+    } catch (_) {}
+    return { ...DEFAULT_CONFIG, models: { ...DEFAULT_MODELS } };
+  });
+
+  // FIX 1: live model set + FIX 3: tier chosen for the current run. Refs avoid stale closures.
+  const modelSetRef = useRef(null);
+  const runTierRef  = useRef(config.tier || DEFAULT_TIER);
+
+  // FIX 1: on mount and whenever the key changes, fetch the real model list and record
+  // which configured models had to be swapped — surfaced to the user, not hidden.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const set = await fetchValidModels(config.openRouterKey);
+      if (cancelled || !set) return;
+      modelSetRef.current = set;
+      // Compute remaps across every role in every tier so the warning is complete.
+      const seen = {}, remaps = [], missing = [];
+      Object.values(MODEL_TIERS).forEach(t => Object.values(t.models).forEach(id => {
+        if (seen[id]) return; seen[id] = 1;
+        if (!set.has(id)) {
+          const to = resolveModelId(id, set);
+          missing.push(id);
+          if (to !== id) remaps.push({ from: id, to });
+        }
+      }));
+      setModelStatus({ checked: true, remaps, missing });
+    })();
+    return () => { cancelled = true; };
+  }, [config.openRouterKey]);
+
+  // FIX 1 + FIX 3: resolve a role to a real model, using the tier picked for this run.
+  const pickModel = (role) => {
+    const tier = runTierRef.current || config.tier || DEFAULT_TIER;
+    const base = (MODEL_TIERS[tier] && MODEL_TIERS[tier].models[role]) || DEFAULT_MODELS[role];
+    return resolveModelId(base, modelSetRef.current);
+  };
+
+  const scrollRef = useRef(null);
+
+  // NEW FEATURE 2: live cost counter. Ref accumulates estimated cost; helper pushes to msg.
+  const costRef = useRef(0);
+  const addCost = (aid, modelId, approxTokens) => {
+    const c = estCallCost(modelId, approxTokens);
+    costRef.current += c;
+    const rounded = costRef.current;
+    setMsgs(p => p.map(m => m.id === aid ? { ...m, cost: rounded } : m));
+  };
+  const taRef     = useRef(null);
+
+  useEffect(() => { localStorage.setItem(S_CONFIG, JSON.stringify(config)); }, [config]);
+  useEffect(() => { localStorage.setItem(S_CHATS, JSON.stringify(chats.slice(0, 20))); }, [chats]);
+  useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+  useEffect(() => { if (!config.openRouterKey) setShowCfg(true); }, []);
+
+  useEffect(() => {
+    const url = genIcon(192);
+    if (!url) return;
+    const al = document.createElement('link'); al.rel = 'apple-touch-icon'; al.href = url;
+    document.head.appendChild(al);
+    const mf = { name: 'OpenKal.ai Council', short_name: 'Council', start_url: location.href,
+      display: 'standalone', background_color: '#06060e', theme_color: '#7c3aed',
+      icons: [{ src: url, sizes: '192x192', type: 'image/png' }, { src: genIcon(512)||url, sizes: '512x512', type: 'image/png' }] };
+    const bUrl = URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' }));
+    const ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = bUrl;
+    document.head.appendChild(ml);
+    return () => URL.revokeObjectURL(bUrl);
+  }, []);
+
+  // ── COUNCIL ENGINE ──────────────────────────────────────────────────────────
+  // precomputed: result from runRouter (auto mode) or null (explicit council mode).
+  //   When null, runCouncil calls runRouter + summariseHistory in parallel internally.
+  // prevCtx: last 2 truncated user messages for router context.
+  // chain: full message history for summarisation.
+
+  const runCouncil = async (prompt, aid, precomputed, prevCtx, chain, allowSkip = false) => {
+    const K = config.openRouterKey;
+
+    const track = (key, state, label, meta) => {
+      setMsgs(p => p.map(m => {
+        if (m.id !== aid) return m;
+        const exists = m.steps.some(s => s.key === key);
+        const steps = exists
+          ? m.steps.map(s => s.key !== key ? s : { ...s, state, ...(label?{label}:{}), ...(meta?{meta}:{}) })
+          // Step wasn't pre-declared (e.g. web search needed but no Tavily key was
+          // configured at INIT_STEPS time) — inject it now so the status is visible
+          // instead of silently vanishing. Insert right after 'router'.
+          : (() => {
+              const idx = m.steps.findIndex(s => s.key === 'router');
+              const next = [...m.steps];
+              next.splice(idx + 1, 0, { key, label: label || key, state, meta: meta || '' });
+              return next;
+            })();
+        return { ...m, steps };
+      }));
+    };
+
+    const trackSpec = (updates) => {
+      setMsgs(p => p.map(m => m.id !== aid ? m : {
+        ...m, specialists: (m.specialists||[]).map(s => {
+          const u = updates.find(x => x.id === s.id);
+          return u ? { ...s, ...u } : s;
+        })
+      }));
+    };
+
+    // ── 1. Router + history summary (parallel) ─────────────────────────────
+    track('router', 'active', 'Question Disturber + history summary...');
+
+    const hasHistory = chain.slice(0, -1).filter(m => m.role === 'user' && m.content?.trim()).length >= 2;
+    let plan, keys, safeSkip, requiresWebSearch, searchQuery, historySummary;
+
+    if (precomputed) {
+      ({ plan, keys, safeSkip, requiresWebSearch, searchQuery } = precomputed);
+      historySummary = precomputed.historySummary || '';
+    } else {
+      // Explicit council mode: run router + summary in parallel — zero added latency
+      const [routed, summary] = await Promise.all([
+        runRouter(K, prompt, prevCtx),
+        hasHistory ? summariseHistory(K, chain) : Promise.resolve('')
+      ]);
+      ({ plan, keys, safeSkip, requiresWebSearch, searchQuery } = routed);
+      historySummary = summary;
+    }
+
+    if (historySummary) {
+      setMsgs(p => p.map(m => m.id === aid ? { ...m, hasSummary: true } : m));
+    }
+
+    const note = safeSkip.length ? ` · skip: ${safeSkip.join(', ')}` : '';
+    const ctxNote = historySummary ? ' · ctx✓' : '';
+    track('router', 'done', `${keys.length}/5 active${note}${ctxNote}`, 'ROUTED');
+    trackSpec(SPEC_KEYS.map(k => ({ id: k, state: keys.includes(k) ? 'active' : 'dim', preview: '' })));
+
+    // Build shared prompt headers
+    const contextHeader = historySummary ? `CONVERSATION CONTEXT:\n${historySummary}\n\n` : '';
+
+    // ── 2. Web search ─────────────────────────────────────────────────────────
+    let webContext = '', didWebSearch = false;
+    if (requiresWebSearch && searchQuery && config.tavilyKey) {
+      track('web', 'active', `Web search: "${searchQuery.slice(0,50)}"...`);
+      const result = await tavilySearch(config.tavilyKey, searchQuery);
+      if (result) {
+        webContext = result; didWebSearch = true;
+        track('web', 'done', 'Live web data integrated.', 'WEB_OK');
+      } else {
+        track('web', 'fail', 'Search returned no results.', 'SKIP');
+      }
+    } else if (requiresWebSearch && !config.tavilyKey) {
+      track('web', 'fail', 'Web search needed — add a free Tavily key in Config to enable this.', 'NO_KEY');
+    }
+    if (didWebSearch) setMsgs(p => p.map(m => m.id === aid ? { ...m, webSearch: true } : m));
+    const webHeader = webContext ? `LIVE WEB CONTEXT:\n${webContext}\n\n` : '';
+
+    // ── 3. Round 1 — streaming specialists in parallel ────────────────────────
+    // ONE shared previewBuf flushed via ONE setInterval every 150ms.
+    // Max 7 setMsgs/sec regardless of specialist count — mobile-safe.
+    track('round1', 'active', `${keys.length} specialists streaming in parallel...`);
+    const previewBuf = {};
+    let previewTimer = setInterval(() => {
+      const entries = Object.entries(previewBuf);
+      if (!entries.length) return;
+      setMsgs(p => p.map(m => m.id !== aid ? m : {
+        ...m, specialists: (m.specialists||[]).map(s => {
+          const found = previewBuf[s.id];
+          return found !== undefined ? { ...s, preview: found } : s;
+        })
+      }));
+    }, 150);
+
+    const r1 = await Promise.all(keys.map(async key => {
+      const spec  = SPECIALISTS[key];
+      const model = pickModel(key);
+      const dir   = plan[`${key}_directive`] || `Analyze from your perspective as ${spec.name}.`;
+      const userMsg = `${contextHeader}${webHeader}CURRENT REQUEST:\n${prompt}\n\nYOUR DIRECTIVE:\n${dir}`;
+      try {
+        const content = await callORStream(K, model,
+          [{ role: 'system', content: spec.persona }, { role: 'user', content: userMsg }],
+          (partial) => { previewBuf[key] = partial.slice(0, 180); },
+          1400, 0.1
+        );
+        delete previewBuf[key];  // stop timer re-applying stale entry for this specialist
+        trackSpec([{ id: key, state: 'done', preview: '' }]);
+        return { id: key, name: spec.name, content, ok: true };
+      } catch (_) {
+        // Stream failed — fall back to non-streamed callOR
+        try {
+          const content = await callOR(K, model,
+            [{ role: 'system', content: spec.persona }, { role: 'user', content: userMsg }],
+            1400, 0.1
+          );
+          delete previewBuf[key];
+          trackSpec([{ id: key, state: 'done', preview: '' }]);
+          return { id: key, name: spec.name, content, ok: true };
+        } catch (e) {
+          delete previewBuf[key];
+          trackSpec([{ id: key, state: 'fail', preview: '' }]);
+          return { id: key, name: spec.name, content: `Error: ${e.message}`, ok: false };
+        }
+      }
+    }));
+
+    clearInterval(previewTimer);
+    // Final flush: clear any residual previews
+    setMsgs(p => p.map(m => m.id !== aid ? m : {
+      ...m, specialists: (m.specialists||[]).map(s => ({ ...s, preview: '' }))
+    }));
+    track('round1', 'done', 'Round 1 complete.', 'R1_DONE');
+
+    // FEATURE 2: live cost — Round 1 specialists
+    const okR1 = r1.filter(r => r.ok);
+    okR1.forEach(r => {
+      const model = pickModel(r.id);
+      addCost(aid, model, 1800); // ~400 input + ~1400 output
+    });
+    addCost(aid, ROUTER_MODEL, 400); // router + summary calls
+
+    // ── 4. FIX 4: Consensus gate — skip cross-exam when specialists agree ──────
+    // allowSkip is true only in Auto mode. Explicit Council and Compare always run
+    // the full adversarial pass (the user asked for the works).
+    track('severity', 'active', 'Checking specialist consensus...');
+    const conflict = allowSkip ? await checkConsensus(K, prompt, okR1) : true;
+    addCost(aid, ROUTER_MODEL, 200); // consensus check
+
+    let r2, totalSevere = 0, critNote = '', devilNote = '';
+
+    if (!conflict) {
+      // Agreement → skip Round 2. But hedge with a single Red Team devil's-advocate
+      // pass, in case all specialists share the same blind spot.
+      track('severity', 'done', 'Consensus reached — running devil\'s advocate.', 'CONSENSUS');
+      try {
+        const redKey   = 'red_team';
+        const redModel = pickModel(redKey);
+        const consensusBody = okR1.map(r => `### ${r.name}\n${(r.content || '').slice(0, 1200)}`).join('\n\n');
+        const daText = await callOR(K, redModel,
+          [{ role: 'system', content: SPECIALISTS[redKey] ? SPECIALISTS[redKey].persona : DEVIL_ADVOCATE_PROMPT },
+           { role: 'user', content: `${DEVIL_ADVOCATE_PROMPT}\n\nQUESTION:\n${prompt}\n\nUNANIMOUS SPECIALIST ANALYSES:\n${consensusBody}` }],
+          600, 0.3
+        );
+        const trimmed = (daText || '').trim();
+        if (trimmed && !/^CONSENSUS_HOLDS\s*$/i.test(trimmed)) {
+          devilNote = `\n\n⚠️ DEVIL'S ADVOCATE CHALLENGE (consensus pass — verify these before trusting):\n${trimmed}\n`;
+          track('round2', 'done', 'Skipped — but devil\'s advocate raised concerns.', 'CHALLENGED');
+        } else {
+          track('round2', 'done', 'Skipped — devil\'s advocate found nothing.', 'CONSENSUS_HELD');
+        }
+      } catch (_) {
+        track('round2', 'done', 'Skipped — specialists agree.', 'SKIPPED');
+      }
+      addCost(aid, pickModel('adversary'), 800); // devil's advocate call
+      r2 = r1;
+    } else {
+      track('severity', 'done', allowSkip ? 'Conflicts found — cross-examining.' : 'Gate open.', 'GATE_OPEN');
+
+      // NEW: token-light Round 2 — extract just the disagreements once (cheap), then
+      // hand each specialist that conflict list instead of every peer essay.
+      // Falls back to full peer text if the extractor fails or returns nothing.
+      const conflictDigest = await extractConflicts(K, okR1);
+      const usingDigest = !!conflictDigest;
+
+      // ── 5. Round 2 — streaming cross-examination ────────────────────────────
+      track('round2', 'active',
+        usingDigest ? 'Cross-exam streaming (conflict digest)...' : 'Adversarial cross-examination streaming...');
+      trackSpec(okR1.map(r => ({ id: r.id, state: 'active', preview: '' })));
+
+      const previewBuf2 = {};
+      let previewTimer2 = setInterval(() => {
+        const entries = Object.entries(previewBuf2);
+        if (!entries.length) return;
+        setMsgs(p => p.map(m => m.id !== aid ? m : {
+          ...m, specialists: (m.specialists||[]).map(s => {
+            const found = previewBuf2[s.id];
+            return found !== undefined ? { ...s, preview: found } : s;
+          })
+        }));
+      }, 150);
+
+      r2 = await Promise.all(r1.map(async cur => {
+        if (!cur.ok) return cur;
+        const model   = pickModel(cur.id);
+        // If we have a digest, send only the conflict bullets. Otherwise fall back to full peers.
+        const peerSection = usingDigest
+          ? `CONFLICT POINTS RAISED BY THE PANEL:\n${conflictDigest}`
+          : `PEER ANALYSES:\n${r1.filter(p => p.id !== cur.id && p.ok).map(p => `### ${p.name}\n${p.content}`).join('\n\n---\n\n')}`;
+        const xPrompt = `${contextHeader}ORIGINAL REQUEST:\n${prompt}\n\n` +
+          `YOUR ROUND 1 ANALYSIS:\n${cur.content}\n\n` +
+          `${peerSection}\n\n` +
+          `CROSS-EXAMINATION: For each conflict above, tag your position with [SEVERE], [WARN], [CORRECT], or [SKIP].\n` +
+          `Then output your REVISED FINAL POSITION.`;
+        try {
+          const content = await callORStream(K, model,
+            [{ role: 'system', content: SPECIALISTS[cur.id].persona }, { role: 'user', content: xPrompt }],
+            (partial) => { previewBuf2[cur.id] = partial.slice(0, 180); },
+            1400, 0.2
+          );
+          delete previewBuf2[cur.id];
+          trackSpec([{ id: cur.id, state: 'done', preview: '' }]);
+          return { id: cur.id, name: cur.name, content, ok: true };
+        } catch (_) {
+          try {
+            const content = await callOR(K, model,
+              [{ role: 'system', content: SPECIALISTS[cur.id].persona }, { role: 'user', content: xPrompt }],
+              1400, 0.2
+            );
+            delete previewBuf2[cur.id];
+            trackSpec([{ id: cur.id, state: 'done', preview: '' }]);
+            return { id: cur.id, name: cur.name, content, ok: true };
+          } catch (e) {
+            delete previewBuf2[cur.id];
+            trackSpec([{ id: cur.id, state: 'fail', preview: '' }]);
+            return { ...cur, content: `Cross-exam error: ${e.message}`, ok: false };
+          }
+        }
+      }));
+
+      clearInterval(previewTimer2);
+      setMsgs(p => p.map(m => m.id !== aid ? m : {
+        ...m, specialists: (m.specialists||[]).map(s => ({ ...s, preview: '' }))
+      }));
+
+      totalSevere = r2.reduce((n, o) => n + parseSeverity(o.content || '').severe, 0);
+      critNote    = totalSevere > 0
+        ? `\n⚠️ PRIORITY: ${totalSevere} [SEVERE] peer conflicts. Resolve EVERY one explicitly.\n\n` : '';
+      track('round2', 'done',
+        `Cross-exam complete. ${totalSevere > 0 ? `${totalSevere} SEVERE conflicts.` : 'Clean consensus.'}`,
+        totalSevere > 0 ? 'CONFLICTS' : 'CLEAN'
+      );
+
+      // NEW: build heatmap rows from tagged claims for the UI to render
+      const heatmap = r2.filter(r => r.ok).flatMap(r =>
+        parseTaggedClaims(r.content || '').map(c => ({ from: r.name, ...c }))
+      );
+      setMsgs(p => p.map(m => m.id === aid ? { ...m, heatmap } : m));
+
+      // FEATURE 2: live cost — Round 2 specialists + conflict extractor
+      r2.filter(r => r.ok).forEach(r => addCost(aid, pickModel(r.id), 1800));
+      addCost(aid, ROUTER_MODEL, 500); // conflict extraction call
+    }
+
+    // FEATURE 1: compute confidence before judge
+    const r2ok = r2.filter(r => r.ok);
+    const consensusSkipped = !conflict;
+    const devilFound = !!devilNote;
+    const confidence = calcConfidence(okR1, r2ok, consensusSkipped, devilFound);
+    setMsgs(p => p.map(m => m.id === aid ? { ...m, confidence } : m));
+
+    // ── 6. Judge — streamed token-by-token, throttled to 20fps ────────────────
+    track('judge', 'active', 'Supreme Judge synthesizing...', totalSevere > 0 ? 'CONFLICT RESOLUTION' : 'SYNTHESIS');
+    const judgeInput = `${critNote}${devilNote}ORIGINAL PROMPT:\n${prompt}\n\n${'═'.repeat(50)}\n${r2.map(r => `=== ${r.name} ===\n${r.content}`).join('\n\n')}`;
+    const judgeModel = pickModel('judge');
+    let synthesis, lastFlush = 0;
+    const onJudgeToken = (partial) => {
+      const now = Date.now();
+      if (now - lastFlush > 50) {
+        setMsgs(p => p.map(m => m.id === aid ? { ...m, content: partial, streaming: true } : m));
+        lastFlush = now;
+      }
+    };
+    try {
+      synthesis = await callORStream(K, judgeModel,
+        [{ role: 'system', content: JUDGE_PROMPT }, { role: 'user', content: judgeInput }],
+        onJudgeToken, 2200, 0.05
+      );
+    } catch (_) {
+      synthesis = await callOR(K, judgeModel,
+        [{ role: 'system', content: JUDGE_PROMPT }, { role: 'user', content: judgeInput }],
+        2200, 0.05
+      );
+    }
+    // Clear streaming flag inside runCouncil too (belt + suspenders with runPipeline's final update)
+    setMsgs(p => p.map(m => m.id === aid ? { ...m, content: synthesis, streaming: false } : m));
+    addCost(aid, judgeModel, 2600); // judge: ~400 input (condensed) + ~2200 output
+    track('judge', 'done', 'Master synthesis complete.', 'SUCCESS');
+    return synthesis;
+  };
+
+  // ── PIPELINE RUNNER ─────────────────────────────────────────────────────────
+
+  const runPipeline = async (text, chain) => {
+    setLoading(true);
+    costRef.current = 0; // reset live cost counter
+    const K = config.openRouterKey;
+
+    // Truncated prev user msgs for router context (cheap, fast)
+    const priorUserMsgs = chain.slice(0, -1).filter(m => m.role === 'user' && m.content?.trim());
+    const prevCtx       = priorUserMsgs.slice(-2).map(m => m.content.slice(0, 200)).join('\n\n');
+    const hasHistory    = priorUserMsgs.length >= 2;
+
+    let eff = mode, precomputed = null;
+    // FIX 3: default the run tier to the user's selection (this acts as a budget ceiling).
+    let effTier = config.tier || DEFAULT_TIER;
+    runTierRef.current = effTier;
+
+    if (mode === 'auto') {
+      try {
+        // Router + history summary run in parallel — no added latency
+        const [routed, summary] = await Promise.all([
+          runRouter(K, text, prevCtx),
+          hasHistory ? summariseHistory(K, chain) : Promise.resolve('')
+        ]);
+        precomputed = { ...routed, historySummary: summary };
+        // simple → Fusion, moderate → Strike (2-3 specialists, no Judge), hard → full Council
+        if (routed.complexity === 'simple') eff = 'quick';
+        else if (routed.complexity === 'moderate') eff = 'strike';
+        else eff = 'council';
+        // FIX 3: pick the price tier from complexity, never above the user's ceiling.
+        effTier = capTier(tierForComplexity(routed.complexity), config.tier || DEFAULT_TIER);
+        runTierRef.current = effTier;
+      } catch (_) {
+        const complex = text.length > 80 || text.includes('```')
+          || /\b(review|fix|analyze|debug|check|code|function|class|help|implement|why|how|design|system)\b/i.test(text);
+        eff = complex ? 'strike' : 'quick';
+        effTier = capTier(complex ? 'medium' : 'low', config.tier || DEFAULT_TIER);
+        runTierRef.current = effTier;
+      }
+    }
+    const tierLabel = (MODEL_TIERS[effTier] || MODEL_TIERS[DEFAULT_TIER]).label;
+    // NEW FEATURE 3: explain why Auto chose this mode
+    const autoReason = (mode === 'auto') ? autoReasonText(
+      precomputed?.complexity || (eff === 'quick' ? 'simple' : eff === 'strike' ? 'moderate' : 'hard'),
+      eff, effTier
+    ) : null;
+
+    if (eff === 'quick') {
+      const aid = Date.now() + 1;
+      setMsgs(p => [...p, { role: 'assistant', content: '', id: aid, ts: Date.now(), engineMode: 'fusion', streaming: true, autoReason, cost: 0 }]);
+      const ctx = chain.map(m => ({ role: m.role, content: m.content }));
+      let done = false;
+
+      // Attempt 1: streamed Fusion
+      if (!done) {
+        try {
+          await callORStream(K, FUSION_MODEL, ctx,
+            partial => setMsgs(p => p.map(m => m.id === aid ? { ...m, content: partial } : m)),
+            1500, 0.4, { tools: [{ type: 'openrouter:fusion' }], tool_choice: 'required' }
+          );
+          done = true;
+        } catch (_) {}
+      }
+      // Attempt 2: non-streamed Fusion
+      if (!done) {
+        try {
+          const reply = await callFusion(K, text);
+          setMsgs(p => p.map(m => m.id === aid ? { ...m, content: reply } : m));
+          done = true;
+        } catch (_) {}
+      }
+      // Attempt 3: streamed plain fast model (always reliable)
+      if (!done) {
+        try {
+          await callORStream(K, ROUTER_MODEL, [
+            { role: 'system', content: 'You are a precise, fast engineering assistant. Use clear markdown.' },
+            ...ctx],
+            partial => setMsgs(p => p.map(m => m.id === aid ? { ...m, content: partial } : m)),
+            1200, 0.4
+          );
+        } catch (e) {
+          setMsgs(p => p.map(m => m.id === aid ? { ...m, content: `**Error:** ${e.message}` } : m));
+        }
+      }
+      setMsgs(p => p.map(m => m.id === aid ? { ...m, streaming: false } : m));
+
+      // FEATURE 2: quick mode cost — one Fusion call
+      addCost(aid, FUSION_MODEL, 1500);
+
+      // FIX 5: fast, non-destructive second opinion. A different cheap model checks the
+      // shown answer; we add a ✓ badge if clean, or a short note if it finds a real issue.
+      // The answer is already displayed, so perceived speed is unchanged.
+      let answerText = '';
+      setMsgs(p => { const mm = p.find(x => x.id === aid); answerText = (mm && mm.content) || ''; return p; });
+      if (answerText && !answerText.startsWith('**Error')) {
+        try {
+          const vModel = resolveModelId('deepseek/deepseek-v4-pro', modelSetRef.current);
+          const raw = await callOR(K, vModel,
+            [{ role: 'system', content: VERIFY_PROMPT },
+             { role: 'user', content: `QUESTION:\n${text}\n\nANSWER:\n${answerText}` }],
+            200, 0.0
+          );
+          const v = JSON.parse(raw.replace(/```json|```/g, '').trim());
+          if (v && v.ok === true)      setMsgs(p => p.map(m => m.id === aid ? { ...m, verified: true } : m));
+          else if (v && v.fix)         setMsgs(p => p.map(m => m.id === aid ? { ...m, verified: true, secondOpinion: String(v.fix) } : m));
+          addCost(aid, vModel, 400); // verify call
+        } catch (_) { /* best-effort: a failed check just leaves the answer as-is */ }
+      }
+
+    } else if (eff === 'strike') {
+      // ── STRIKE: 2-3 specialists, Round 1 only, fast merge. No cross-exam, no Judge. ──
+      const activeKeys = precomputed?.keys?.slice(0, 3) || SPEC_KEYS.slice(0, 3);
+      const specialistRoster = activeKeys.map(k => ({
+        id: k, name: SPECIALISTS[k].name, model: pickModel(k), state: 'dim', preview: ''
+      }));
+      const STRIKE_STEPS = [
+        { key: 'router', label: 'Query Router',    state: 'done', meta: 'STRIKE MODE' },
+        { key: 'round1', label: 'Specialist Panel', state: 'dim',  meta: 'WAITING'    },
+        { key: 'merge',  label: 'Fast Merge',       state: 'dim',  meta: 'WAITING'    },
+      ];
+      const startedAt = Date.now();
+      const aid = Date.now() + 5;
+      setMsgs(p => [...p, {
+        role: 'assistant', content: '', id: aid, engineMode: 'strike', tier: effTier, tierLabel,
+        ts: Date.now(), steps: STRIKE_STEPS, specialists: specialistRoster, autoReason, cost: 0
+      }]);
+
+      const trackS = (key, state, label, meta) => {
+        setMsgs(p => p.map(m => {
+          if (m.id !== aid) return m;
+          const steps = m.steps.map(s => s.key !== key ? s : { ...s, state, ...(label?{label}:{}), ...(meta?{meta}:{}) });
+          return { ...m, steps };
+        }));
+      };
+      const trackSpecS = (updates) => {
+        setMsgs(p => p.map(m => m.id !== aid ? m : {
+          ...m, specialists: (m.specialists||[]).map(s => {
+            const u = updates.find(x => x.id === s.id);
+            return u ? { ...s, ...u } : s;
+          })
+        }));
+      };
+
+      try {
+        const plan = precomputed?.plan || {};
+        const contextHeader = precomputed?.historySummary ? `CONVERSATION CONTEXT:\n${precomputed.historySummary}\n\n` : '';
+
+        // Round 1 — parallel streaming specialists
+        trackS('round1', 'active', `${activeKeys.length} specialists running...`);
+        trackSpecS(activeKeys.map(k => ({ id: k, state: 'active', preview: '' })));
+        const previewBufS = {};
+        let previewTimerS = setInterval(() => {
+          setMsgs(p => p.map(m => m.id !== aid ? m : {
+            ...m, specialists: (m.specialists||[]).map(s => {
+              const found = previewBufS[s.id];
+              return found !== undefined ? { ...s, preview: found } : s;
+            })
+          }));
+        }, 150);
+
+        const r1 = await Promise.all(activeKeys.map(async key => {
+          const spec    = SPECIALISTS[key];
+          const model   = pickModel(key);
+          const dir     = plan[`${key}_directive`] || `Analyze from your perspective as ${spec.name}.`;
+          const userMsg = `${contextHeader}CURRENT REQUEST:\n${text}\n\nYOUR DIRECTIVE:\n${dir}`;
+          try {
+            const content = await callORStream(K, model,
+              [{ role: 'system', content: spec.persona }, { role: 'user', content: userMsg }],
+              (partial) => { previewBufS[key] = partial.slice(0, 180); },
+              1000, 0.1
+            );
+            delete previewBufS[key];
+            trackSpecS([{ id: key, state: 'done', preview: '' }]);
+            return { id: key, name: spec.name, content, ok: true };
+          } catch (_) {
+            try {
+              const content = await callOR(K, model,
+                [{ role: 'system', content: spec.persona }, { role: 'user', content: userMsg }],
+                1000, 0.1
+              );
+              delete previewBufS[key];
+              trackSpecS([{ id: key, state: 'done', preview: '' }]);
+              return { id: key, name: spec.name, content, ok: true };
+            } catch (e) {
+              delete previewBufS[key];
+              trackSpecS([{ id: key, state: 'fail', preview: '' }]);
+              return { id: key, name: spec.name, content: `Error: ${e.message}`, ok: false };
+            }
+          }
+        }));
+
+        clearInterval(previewTimerS);
+        setMsgs(p => p.map(m => m.id !== aid ? m : {
+          ...m, specialists: (m.specialists||[]).map(s => ({ ...s, preview: '' }))
+        }));
+        trackS('round1', 'done', 'Specialists complete.', `${r1.filter(r=>r.ok).length}/${activeKeys.length} OK`);
+
+        // Fast merge — no Judge, no cross-exam, just quick synthesis
+        trackS('merge', 'active', 'Merging...', 'SYNTHESIZING');
+        const mergeModel  = pickModel('merge') || STRIKE_MODEL;
+        const mergeInput = `QUESTION: ${text}\n\n${r1.filter(r=>r.ok).map(r=>`=== ${r.name} ===\n${r.content}`).join('\n\n')}`;
+        let merged, lastFlushS = 0;
+        try {
+          merged = await callORStream(K, mergeModel,
+            [{ role: 'system', content: STRIKE_PROMPT }, { role: 'user', content: mergeInput }],
+            partial => {
+              const now = Date.now();
+              if (now - lastFlushS > 50) {
+                setMsgs(p => p.map(m => m.id === aid ? { ...m, content: partial, streaming: true } : m));
+                lastFlushS = now;
+              }
+            },
+            1200, 0.1
+          );
+        } catch (_) {
+          merged = await callOR(K, mergeModel,
+            [{ role: 'system', content: STRIKE_PROMPT }, { role: 'user', content: mergeInput }],
+            1200, 0.1
+          );
+        }
+
+        const elapsed = Math.round((Date.now() - startedAt) / 1000);
+        setMsgs(p => p.map(m => m.id === aid ? { ...m, content: merged, elapsed, streaming: false } : m));
+        // FEATURE 2: strike cost — specialists + merge
+        activeKeys.forEach(k => addCost(aid, pickModel(k), 1800));
+        addCost(aid, mergeModel, 1400);
+        trackS('merge', 'done', 'Strike complete.', 'SUCCESS');
+      } catch (e) {
+        setMsgs(p => p.map(m => m.id === aid ? {
+          ...m, streaming: false,
+          content: `### ⚠️ Strike Error\n\`\`\`\n${e.message}\n\`\`\`\nCheck your OpenRouter key in Config, then try again.`
+        } : m));
+      }
+
+    } else if (eff === 'compare') {
+      // ── FIX 2: BLIND A/B — full council vs one strong single model, order randomized.
+      // Lets you actually prove whether the council wins on hard problems instead of guessing.
+      const startedAt = Date.now();
+      const aid = Date.now() + 7;
+      const councilIsA = Math.random() < 0.5;
+      const roster = SPEC_KEYS.map(k => ({
+        id: k, name: SPECIALISTS[k].name, model: pickModel(k), state: 'dim', preview: ''
+      }));
+      const CMP_STEPS = [
+        { key: 'router',   label: 'Question Disturber + Memory', state: 'dim', meta: 'WAITING' },
+        ...(config.tavilyKey ? [{ key: 'web', label: 'Web Search', state: 'dim', meta: 'WAITING' }] : []),
+        { key: 'round1',   label: 'Specialist Pipeline',         state: 'dim', meta: 'WAITING' },
+        { key: 'severity', label: 'Severity Gate',               state: 'dim', meta: 'GATED'   },
+        { key: 'round2',   label: 'Cross-Examination',           state: 'dim', meta: 'WAITING' },
+        { key: 'judge',    label: 'Supreme Judge',               state: 'dim', meta: 'WAITING' },
+      ];
+      setMsgs(p => [...p, {
+        role: 'assistant', id: aid, ts: Date.now(), engineMode: 'compare', tier: effTier, tierLabel,
+        steps: CMP_STEPS, specialists: roster,
+        compare: { revealed: false, items: [
+          { slot: 'A', src: councilIsA ? 'council' : 'solo', content: '', done: false },
+          { slot: 'B', src: councilIsA ? 'solo' : 'council', content: '', done: false },
+        ] }
+      }]);
+
+      const soloSlot    = councilIsA ? 'B' : 'A';
+      const councilSlot = councilIsA ? 'A' : 'B';
+      const setSlot = (slot, patch) => setMsgs(p => p.map(m => m.id !== aid ? m : {
+        ...m, compare: { ...m.compare, items: m.compare.items.map(it => it.slot === slot ? { ...it, ...patch } : it) }
+      }));
+
+      const soloModel = resolveModelId('anthropic/claude-opus-4.8', modelSetRef.current);
+      const soloRun = (async () => {
+        try {
+          const out = await callORStream(K, soloModel,
+            [{ role: 'system', content: SOLO_PROMPT }, { role: 'user', content: text }],
+            partial => setSlot(soloSlot, { content: partial }), 2200, 0.3
+          );
+          setSlot(soloSlot, { content: out, done: true });
+        } catch (_) {
+          try {
+            const out = await callOR(K, soloModel,
+              [{ role: 'system', content: SOLO_PROMPT }, { role: 'user', content: text }], 2200, 0.3);
+            setSlot(soloSlot, { content: out, done: true });
+          } catch (e2) { setSlot(soloSlot, { content: `Error: ${e2.message}`, done: true }); }
+        }
+      })();
+
+      const councilRun = (async () => {
+        // allowSkip=false → council runs at full adversarial strength for a fair fight.
+        try {
+          const out = await runCouncil(text, aid, null, prevCtx, chain, false);
+          setSlot(councilSlot, { content: out, done: true });
+        } catch (e) { setSlot(councilSlot, { content: `Council error: ${e.message}`, done: true }); }
+      })();
+
+      await Promise.all([soloRun, councilRun]);
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
+      setMsgs(p => p.map(m => m.id === aid ? { ...m, elapsed, streaming: false } : m));
+
+    } else {
+      const specialistRoster = SPEC_KEYS.map(k => ({
+        id: k, name: SPECIALISTS[k].name, model: pickModel(k), state: 'dim', preview: ''
+      }));
+      const INIT_STEPS = [
+        { key: 'router',   label: 'Question Disturber + Memory', state: 'dim', meta: 'WAITING' },
+        ...(config.tavilyKey ? [{ key: 'web', label: 'Web Search', state: 'dim', meta: 'WAITING' }] : []),
+        { key: 'round1',   label: 'Specialist Pipeline',         state: 'dim', meta: 'WAITING' },
+        { key: 'severity', label: 'Severity Gate',               state: 'dim', meta: 'GATED'   },
+        { key: 'round2',   label: 'Cross-Examination',           state: 'dim', meta: 'WAITING' },
+        { key: 'judge',    label: 'Supreme Judge',               state: 'dim', meta: 'WAITING' },
+      ];
+      const startedAt = Date.now();
+      const aid = Date.now() + 5;
+      setMsgs(p => [...p, {
+        role: 'assistant', content: '', id: aid, engineMode: 'council', tier: effTier, tierLabel,
+        ts: Date.now(), steps: INIT_STEPS, specialists: specialistRoster, autoReason, cost: 0
+      }]);
+      try {
+        // FIX 4: consensus-skip allowed only when the user chose Auto. Explicit Council = full pass.
+        const result  = await runCouncil(text, aid, precomputed, prevCtx, chain, mode === 'auto');
+        const elapsed = Math.round((Date.now() - startedAt) / 1000);
+        // Explicit streaming: false here covers non-streamed fallback path inside runCouncil
+        setMsgs(p => p.map(m => m.id === aid ? { ...m, content: result, elapsed, streaming: false } : m));
+      } catch (e) {
+        setMsgs(p => p.map(m => m.id === aid ? {
+          ...m, streaming: false,
+          content: `### ⚠️ Council Error\n\`\`\`\n${e.message}\n\`\`\`\nCheck your OpenRouter key in Config, then try again.`
+        } : m));
+      }
+    }
+
+    const finalId = chatId || `t${Date.now()}`;
+    setMsgs(final => {
+      const title = (final.find(m => m.role === 'user')?.content || 'Thread').slice(0, 52) + '…';
+      setChats(prev => [{ id: finalId, title, messages: final, updatedAt: Date.now() }, ...prev.filter(c => c.id !== finalId)]);
+      return final;
+    });
+    if (!chatId) setChatId(finalId);
+    setLoading(false);
+    setTimeout(() => taRef.current?.focus(), 60);
+  };
+
+  // ── HANDLERS ────────────────────────────────────────────────────────────────
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    if (!config.openRouterKey) { setShowCfg(true); return; }
+    setInput('');
+    if (taRef.current) taRef.current.style.height = 'auto';
+    const userMsg = { role: 'user', content: text, id: Date.now(), ts: Date.now() };
+    const chain   = [...msgs, userMsg];
+    setMsgs(chain);
+    await runPipeline(text, chain);
+  };
+
+  const startEdit  = (id) => { if (loading) return; const m = msgs.find(m => m.id === id); if (!m || m.role !== 'user') return; setEditId(id); setEditTxt(m.content); };
+  const cancelEdit = ()   => { setEditId(null); setEditTxt(''); };
+  const commitEdit = async () => {
+    const text = editTxt.trim();
+    if (!text || !editId) { cancelEdit(); return; }
+    const idx = msgs.findIndex(m => m.id === editId);
+    if (idx === -1) { cancelEdit(); return; }
+    const truncated = [...msgs.slice(0, idx), { ...msgs[idx], content: text, edited: true }];
+    setEditId(null); setEditTxt('');
+    setMsgs(truncated);
+    await runPipeline(text, truncated);
+  };
+
+  const newSession = () => { setMsgs([]); setChatId(null); setEditId(null); setEditTxt(''); setSbOpen(false); };
+  const loadChat   = c  => { setMsgs(c.messages||[]); setChatId(c.id); setEditId(null); setEditTxt(''); };
+  const onKey    = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+  const onResize = e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px'; };
+
+  const activeTier = config.tier || DEFAULT_TIER;
+
+  return html`
+    <div class="app">
+      <${Sidebar} chats=${chats} activeId=${chatId} onSelect=${loadChat} onNew=${newSession} visible=${sbOpen} onClose=${() => setSbOpen(false)}/>
+      <div class="main">
+        <div class="topbar">
+          <button class="menu-btn" onClick=${() => setSbOpen(true)}>☰</button>
+          <span class="top-title">OpenKal.ai Council</span>
+          <div class="mode-sel">
+            ${[['auto','⚡ Auto'],['quick','💬 Quick'],['council','🔬 Council'],['compare','⚖️ Compare']].map(([m,l]) => html`
+              <button key=${m} class=${`mode-btn${mode===m?' on':''}`} onClick=${() => setMode(m)}>${l}</button>`)}
+          </div>
+          <button class="cfg-btn" onClick=${() => setShowCfg(true)}>🔑 Config</button>
+        </div>
+        <div class="msgs">
+          ${msgs.length === 0 && !loading && html`
+            <div class="welcome">
+              <div style="font-size:40px;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(124,58,237,.5))">🔮</div>
+              <h1>OpenKal.ai Council</h1>
+              <p>
+                Auto mode reads each question: simple → Fusion (instant), moderate → Strike,
+                hard → the full 5-specialist adversarial council. It also picks the price tier
+                for you. Round 2 only sees the *disagreements*, not full peer essays — leaner
+                and cheaper. When specialists agree, the Red Team runs one devil's-advocate
+                sweep so groupthink can't slip through. Every cross-exam shows a tagged conflict
+                heatmap. Quick answers get a fast second-opinion check. Use ⚖️ Compare to test
+                the council blind against a single top model.
+                ${config.tavilyKey ? ' Live web search enabled.' : ''}
+              </p>
+              ${modelStatus.checked && modelStatus.remaps.length > 0 && html`
+                <div class="mdl-status warn">
+                  <span>⚠️</span>
+                  <span><strong>${modelStatus.remaps.length} model${modelStatus.remaps.length===1?'':'s'} unavailable on OpenRouter — using live fallbacks:</strong>
+                  ${modelStatus.remaps.slice(0,4).map(r => `${shortModel(r.from)} → ${shortModel(r.to)}`).join(', ')}${modelStatus.remaps.length>4?' …':''}</span>
+                </div>`}
+              ${modelStatus.checked && modelStatus.remaps.length === 0 && html`
+                <div class="mdl-status ok"><span>✓</span><span>All configured models verified live on OpenRouter.</span></div>`}
+              <div class="diversity-bar">
+                <span style="font-size:11px;color:var(--muted)">Tier ceiling:</span>
+                <span class=${`div-chip ${activeTier==='high'?'quality':activeTier==='medium'?'reason':'fast'}`}>
+                  ${MODEL_TIERS[activeTier].label}
+                </span>
+                <span style="font-size:10px;color:var(--dim)">${MODEL_TIERS[activeTier].cost}</span>
+              </div>
+              <div class="sug-grid">
+                <button class="sug" onClick=${() => setInput("What are the systemic differences between connection pooling in PostgreSQL vs Redis under multi-tenant lock contention?")}>
+                  <strong>🧠 Systems Architecture</strong><small>Tests structural boundary analysis</small>
+                </button>
+                <button class="sug" onClick=${() => setInput("Design a secure, memory-isolated validation pipeline in TypeScript with strict hardware execution constraints.")}>
+                  <strong>🛡️ Security Engineering</strong><small>Forces adversarial red team review</small>
+                </button>
+                <button class="sug full" onClick=${() => { setMode('compare'); setInput(DEMO); }}>
+                  ⚖️ Compare mode — pit the full council against a single top model, blind
+                </button>
+                <button class="sug full" onClick=${() => setInput(DEMO)}>
+                  📋 Load Council Challenge — triggers full adversarial DAG
+                </button>
+              </div>
+            </div>`}
+          ${msgs.map(m => html`
+            <${MsgBubble} key=${m.id} msg=${m}
+              editId=${editId} editContent=${editTxt}
+              onEditStart=${startEdit} onEditChange=${setEditTxt}
+              onEditSave=${commitEdit} onEditCancel=${cancelEdit}
+              loading=${loading}/>`)}
+          <div ref=${scrollRef}></div>
+        </div>
+        <div class="inputbar">
+          <div class="input-wrap">
+            <textarea ref=${taRef} value=${input}
+              disabled=${loading || editId !== null}
+              placeholder=${loading ? 'Council deliberating…' : editId ? 'Finish editing above first…' :
+                mode==='council' ? 'Input complex system challenge…' : mode==='quick' ? 'Input quick query…' :
+                'Input query — simple → Fusion, everything else → Council…'}
+              onInput=${e => { setInput(e.target.value); onResize(e); }}
+              onKeyDown=${onKey} rows="1"></textarea>
+            <button class="send-btn" disabled=${loading || !input.trim() || editId !== null} onClick=${handleSend}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+          <p class="input-hint">Enter to send · Shift+Enter for new line · ✏ to edit any sent message</p>
+        </div>
+      </div>
+      ${showCfg && html`<${SettingsModal} config=${config} onClose=${() => setShowCfg(false)} onSave=${c => setConfig(c)}/>`}
+    </div>`;
+}
+
+render(html`<${App}/>`, document.getElementById('root'));
+</script>
+
+<!-- Visitor analytics (GoatCounter) — privacy-friendly, no cookies.
+     Your dashboard: https://glasswing-fusion.goatcounter.com -->
+<script data-goatcounter="https://glasswing-fusion.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
