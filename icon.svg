@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0326"/>
+      <stop offset="100%" stop-color="#06060e"/>
+    </linearGradient>
+    <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.35" cy="0.3" r="0.5">
+      <stop offset="0%" stop-color="#e9d5ff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <!-- Outer glow -->
+  <circle cx="256" cy="240" r="160" fill="url(#glow)" opacity="0.35"/>
+  <!-- Main orb -->
+  <circle cx="256" cy="240" r="120" fill="url(#orb)" opacity="0.9"/>
+  <!-- Shine highlight -->
+  <circle cx="256" cy="240" r="120" fill="url(#shine)"/>
+  <!-- Council nodes — 5 specialist dots arranged in a pentagon inside the orb -->
+  <circle cx="256" cy="160" r="12" fill="#34d399" opacity="0.9"/>
+  <circle cx="327" cy="209" r="12" fill="#67e8f9" opacity="0.9"/>
+  <circle cx="305" cy="295" r="12" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="207" cy="295" r="12" fill="#f87171" opacity="0.9"/>
+  <circle cx="185" cy="209" r="12" fill="#a78bfa" opacity="0.9"/>
+  <!-- Connection lines between nodes -->
+  <line x1="256" y1="160" x2="327" y2="209" stroke="#e9d5ff" stroke-width="1.5" opacity="0.3"/>
+  <line x1="327" y1="209" x2="305" y2="295" stroke="#e9d5ff" stroke-width="1.5" opacity="0.3"/>
+  <line x1="305" y1="295" x2="207" y2="295" stroke="#e9d5ff" stroke-width="1.5" opacity="0.3"/>
+  <line x1="207" y1="295" x2="185" y2="209" stroke="#e9d5ff" stroke-width="1.5" opacity="0.3"/>
+  <line x1="185" y1="209" x2="256" y2="160" stroke="#e9d5ff" stroke-width="1.5" opacity="0.3"/>
+  <!-- Cross connections (star pattern) -->
+  <line x1="256" y1="160" x2="305" y2="295" stroke="#e9d5ff" stroke-width="1" opacity="0.15"/>
+  <line x1="256" y1="160" x2="207" y2="295" stroke="#e9d5ff" stroke-width="1" opacity="0.15"/>
+  <line x1="327" y1="209" x2="207" y2="295" stroke="#e9d5ff" stroke-width="1" opacity="0.15"/>
+  <line x1="185" y1="209" x2="305" y2="295" stroke="#e9d5ff" stroke-width="1" opacity="0.15"/>
+  <line x1="327" y1="209" x2="185" y2="209" stroke="#e9d5ff" stroke-width="1" opacity="0.15"/>
+  <!-- Center judge node -->
+  <circle cx="256" cy="240" r="16" fill="#fff" opacity="0.85"/>
+  <circle cx="256" cy="240" r="8" fill="#7c3aed"/>
+  <!-- Base/pedestal -->
+  <ellipse cx="256" cy="395" rx="90" ry="18" fill="#7c3aed" opacity="0.25"/>
+  <path d="M210,360 Q220,400 256,400 Q292,400 302,360 L290,360 Q285,385 256,385 Q227,385 222,360 Z" fill="#5b21b6" opacity="0.6"/>
+  <!-- Text -->
+  <text x="256" y="460" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-weight="800" font-size="48" fill="#e9d5ff" letter-spacing="3">OPENKAL</text>
+</svg>
